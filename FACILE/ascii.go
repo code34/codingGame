@@ -4,10 +4,9 @@ import "fmt"
 import "os"
 import "bufio"
 
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+// Affiche un texte passé en paramètre
+// en utilisant des lettres de hauteur H, largeur L 
+// selon une font ASCII passé en paramètre
 
 func main() {
 	
@@ -35,11 +34,12 @@ func main() {
 		lines = append(lines, scanner.Text())
 	}
 	
-	// Parcoure l'ensemble du slice text
-	// à la recherche de la lettre
+	// Transforme le texte sous forme de slices d'index A=0, B=1, etc.
+	// Passe tous les caractères en upper
+	// Transforme les charactères non [a-z][A-Z] en ?
 	var index int;
 	for indexinput := 0; indexinput < len(WORD); indexinput++ {
-			index = int(WORD[indexinput])            
+			index = int(WORD[indexinput])
 			if((index > 96 ) && (index < 123)) { index -= 32 }
 			if((index > 64) && (index <91)) { index -= 65} else {
 				if!(index == 63) {index = 26}
@@ -53,7 +53,10 @@ func main() {
 	var safeSubstring string
 
 	fmt.Fprintf(os.Stderr, "Debug WORD: %s INDEX: %d LENCHARS %d NBCHARS %d \n", WORD, index, L)
-	 
+	
+	// Pour chacune des lignes des fonts
+	// Pour chacun des charactères
+	// Affiche l'ensemble des charactères le composant
 	for i := 0; i < H; i++ {
 			safeSubstring = ""
 			for indexinput := 0; indexinput < len(WORD); indexinput++ {
