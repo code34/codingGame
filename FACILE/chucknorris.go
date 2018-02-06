@@ -3,20 +3,13 @@ package main
 import "fmt"
 import "os"
 import "bufio"
-//import "strings"
-//import "strconv"
-
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 
 func main() {
-    scanner := bufio.NewScanner(os.Stdin)
-    scanner.Buffer(make([]byte, 1000000), 1000000)
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Buffer(make([]byte, 1000000), 1000000)
 
-    scanner.Scan()
-    message := scanner.Text()
+	scanner.Scan()
+	message := scanner.Text()
 
 	var newmessage string
 	var bits string
@@ -26,10 +19,10 @@ func main() {
 		bits = fmt.Sprintf("%.7b", letter);
 		for _,bit := range bits {
 			if(bit == prev) { 
-			    newmessage = newmessage + "0"
+				newmessage = newmessage + "0"
 			} else {
-			    if(bit == 49) {
-				    newmessage = newmessage + " 0 0"
+				if(bit == 49) {
+					newmessage = newmessage + " 0 0"
 				} else {
 					newmessage = newmessage + " 00 0"
 				}
