@@ -32,7 +32,10 @@ func main() {
 		}
 	}
 	fmt.Fprintf(os.Stderr, "LANDSITE %d %d %d\n", leftX, rightX, groundY)
-	
+
+	var center int
+	center = (leftX + rightX) / 2
+	var step = 1    
 	for {
 		// hSpeed: the horizontal speed (in m/s), can be negative.
 		// vSpeed: the vertical speed (in m/s), can be negative.
@@ -42,49 +45,82 @@ func main() {
 		var engineL, engine int
 		var X, Y, hSpeed, vSpeed, fuel, rotate, power int
 		fmt.Scan(&X, &Y, &hSpeed, &vSpeed, &fuel, &rotate, &power)
-		fmt.Fprintf(os.Stderr, "VARIABLES X: %d Y: %d hSpeed: %d vSpeed: %d fuel: %d rotate: %d power: %d\n", X, Y, hSpeed, vSpeed, fuel, rotate, power)
-		
-		if X < leftX {
-			engineL = -20
-		} else if X > rightX {
-			engineL = 20
-		} else {
-			if hSpeed < -11 {
-				engineL = -20
-			} else if hSpeed > 11 {
-				engineL = 20
-			} else {
-				engineL = 0
+
+		switch step {
+			case 1:{
+				if X < center {
+					if hSpeed < 20 {
+						fmt.Println("-20 4")
+						fmt.Fprintf(os.Stderr, "PATHA %d\n", power)
+					} else {
+						if hSpeed > 20 {
+							fmt.Println("20 4")
+						} else {
+							fmt.Println("0 4")
+							step = 2
+							fmt.Fprintf(os.Stderr, "PHASE2A %d\n", power)
+						}
+					}   
+				} else if X > center {
+					// si on se décale à gauche +20ms
+					if hSpeed > -20 {
+						fmt.Println("20 4")
+						fmt.Fprintf(os.Stderr, "PATHB %d\n", power)
+					} else {
+						// si on se décale à gauche à plus de 20ms
+						if hSpeed < -20 {
+							fmt.Println("-20 4")
+						} else {
+							// on se maintient à la meme altitude
+							fmt.Println("0 4")
+							step = 2
+							fmt.Fprintf(os.Stderr, "PHASE2B %d\n", power)
+						}
+					}    
+				} else if X > leftX && X < rightX {
+					if hSpeed > -20 && hSpeed < 20 {
+						fmt.Println("0 4")
+						step = 2
+						fmt.Fprintf(os.Stderr, "PHASE2B %d\n", power)                    
+					}
+				}
+			}
+			
+			case 2:{
+				if X > leftX && X < rightX {
+					if hSpeed < 20 {
+						   fmt.Println("-20 3")
+					} else if hSpeed > 20 {
+						fmt.Println("20 3")
+					} else {
+						fmt.Println("0 4")
+						step = 3   
+					}
+				} else {
+					if vSpeed < -30 && Y > (groundY + 100) {
+						fmt.Println("0 4")
+					} else {
+						fmt.Println("0 3")
+					}
+				}
+			}
+			
+			case 3:{
+				if vSpeed > -39 {
+					fmt.Println("0 4")
+				} else {
+					fmt.Println("0 3")
+				}
 			}
 		}
+
+
 		
-		if hSpeed < -30 {
-			engineL = -20
-		} else if hSpeed > 30 {
-			engineL = 20
-		} else {
-			engineL = engineL   
-		}
-			
-		if hSpeed > 50 {
-			engineL = 50
-			engine = 4
-		} else if hSpeed < -50 {
-			engineL = -50
-			engine = 4
-		}
-
-		if vSpeed < -30 {
-			engine = 4
-		} else {
-			engine = 3
-		}
-
-		fmt.Fprintf(os.Stderr, "VARIABLES vertical speed: %d %d %d\n", engineL, hSpeed, vSpeed)
-		fmt.Println(engineL,engine)
+		fmt.Fprintf(os.Stderr, "VARIABLES X: %d Y: %d hSpeed: %d vSpeed: %d fuel: %d rotate: %d power: %d\n", X, Y, hSpeed, vSpeed, fuel, rotate, power)
+		fmt.Fprintf(os.Stderr, "VARIABLES vertical speed: %d %d %d %d\n", engine, engineL, hSpeed, vSpeed)
+		//fmt.Println(engineL,engine)
 		// fmt.Fprintln(os.Stderr, "Debug messages...")
 		
 		// rotate power. rotate is the desired rotation angle. power is the desired thrust power.
-		//fmt.Println("-20 3")
 	}
 }
