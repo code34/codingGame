@@ -8,6 +8,14 @@ import "os"
  * the standard input according to the problem statement.
  **/
 
+func checkspeed() bool {
+	return true
+}
+
+func landsite() bool {
+	return true
+}
+
 func main() {
 	// surfaceN: the number of points used to draw the surface of Mars.
 	var surfaceN int
@@ -33,8 +41,8 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "LANDSITE %d %d %d\n", leftX, rightX, groundY)
 
-	var center int
-	center = (leftX + rightX) / 2
+	//var center int
+	//center = (leftX + rightX) / 2
 	var step = 1    
 	for {
 		// hSpeed: the horizontal speed (in m/s), can be negative.
@@ -46,9 +54,9 @@ func main() {
 		var X, Y, hSpeed, vSpeed, fuel, rotate, power int
 		fmt.Scan(&X, &Y, &hSpeed, &vSpeed, &fuel, &rotate, &power)
 
-		switch step {
+		switch step {        
 			case 1:{
-				if X < center {
+				if X < leftX {
 					if hSpeed < 20 {
 						fmt.Println("-20 4")
 						fmt.Fprintf(os.Stderr, "PATHA %d\n", power)
@@ -57,11 +65,11 @@ func main() {
 							fmt.Println("20 4")
 						} else {
 							fmt.Println("0 4")
-							step = 2
+							//step = 2
 							fmt.Fprintf(os.Stderr, "PHASE2A %d\n", power)
 						}
 					}   
-				} else if X > center {
+				} else if X > rightX {
 					// si on se décale à gauche +20ms
 					if hSpeed > -20 {
 						fmt.Println("20 4")
@@ -73,36 +81,39 @@ func main() {
 						} else {
 							// on se maintient à la meme altitude
 							fmt.Println("0 4")
-							step = 2
+							//step = 2
 							fmt.Fprintf(os.Stderr, "PHASE2B %d\n", power)
 						}
 					}    
 				} else if X > leftX && X < rightX {
-					if hSpeed > -20 && hSpeed < 20 {
+					if hSpeed > -10 && hSpeed < 10 {
 						fmt.Println("0 4")
 						step = 2
 						fmt.Fprintf(os.Stderr, "PHASE2B %d\n", power)                    
+					} else {
+						if hSpeed < -9 {  fmt.Println("-20 4") }
+						if hSpeed > 9 { fmt.Println("20 4") }
 					}
 				}
 			}
 			
 			case 2:{
-				if X > leftX && X < rightX {
-					if hSpeed < 20 {
-						   fmt.Println("-20 3")
-					} else if hSpeed > 20 {
-						fmt.Println("20 3")
-					} else {
-						fmt.Println("0 4")
-						step = 3   
-					}
-				} else {
-					if vSpeed < -30 && Y > (groundY + 100) {
+				//if X > leftX && X < rightX {
+				//    if hSpeed < 20 {
+				//        fmt.Println("-20 3")
+				//    } else if hSpeed > 20 {
+				//        fmt.Println("20 3")
+				//    } else {
+				//        fmt.Println("0 4")
+				//        step = 3   
+				//    }
+				//} else {
+					if vSpeed < -30  {
 						fmt.Println("0 4")
 					} else {
 						fmt.Println("0 3")
 					}
-				}
+				//}
 			}
 			
 			case 3:{
