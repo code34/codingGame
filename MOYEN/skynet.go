@@ -1,13 +1,22 @@
+/*Votre virus a créé une backdoor sur le réseau Skynet vous permettant d'envoyer
+ de nouvelles instructions au virus en temps réél.
+
+Vous décidez de passer à l'attaque active en empêchant Skynet de communiquer
+ sur son propre réseau interne.
+
+Le réseau Skynet est divisé en sous-réseaux. Sur chaque sous-réseau un agent Skynet 
+a pour tâche de transmettre de l'information en se déplaçant de noeud en noeud le 
+long de liens et d'atteindre une des passerelles qui mène vers un autre sous-réseau.
+
+Votre mission est de reprogrammer le virus pour qu'il coupe les liens dans le but 
+d'empêcher l'agent Skynet de sortir de son sous-réseau et ainsi d'informer le hub 
+central de la présence de notre virus.*/
+
 package main
 
 import "fmt"
 import "os"
 import "strconv"
-
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 
 type link struct {
 	s,t int

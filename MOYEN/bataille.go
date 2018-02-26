@@ -1,13 +1,13 @@
+/*Revoyons les bases avec un jeu de cartes de votre enfance : la bataille !
+
+Vous devez écrire un programme qui à partir d'une distribution des cartes détermine
+ le gagnant d'une partie de "bataille".*/
+
 package main
 
 import "fmt"
 import "os"
 import "strconv"
-
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 
 func checkcard(card string) int {
 	if len(card) == 3 { card = card[0:2] } else { card = card[0:1] }

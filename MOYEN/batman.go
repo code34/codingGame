@@ -1,11 +1,11 @@
+/*Batman va rechercher les otages d'un batiment donné en sautant de fenêtre 
+en fenêtre à l'aide de son grappin. Le but de Batman est d'arriver sur la fenêtre
+ de la pièce où les otages se trouvent afin de désamorcer les bombes du Joker.
+  Malheureusement il n'a qu'un nombre de sauts limités avant que les bombes n'explosent...*/
+
 package main
 
 import "fmt"
-
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 
 func main() {
 	// W: width of the building.

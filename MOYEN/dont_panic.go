@@ -1,3 +1,6 @@
+/*Vous devez aider Marvin et ses clones (ou est-ce l'inverse ?) à atteindre la sortie
+pour s'échapper de la zone du générateur.*/
+
 package main
 
 import "fmt"

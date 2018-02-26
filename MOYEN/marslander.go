@@ -1,12 +1,14 @@
+/*L'objectif de votre programme est de faire atterrir, sans crash, la capsule "Mars Lander" 
+qui contient le rover Opportunity. La capsule “Mars Lander” permettant de débarquer 
+le rover est pilotée par un programme qui échoue trop souvent dans le simulateur de la NASA.
+
+Ce puzzle est le second niveau de la trilogie "Mars Lander". Les contrôles sont les mêmes
+que dans le niveau précédent mais vous devez maintenant contrôler l'angle pour réussir.*/
+
 package main
 
 import "fmt"
 import "os"
-
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 
 func staticspeed(vSpeed int, landY int, Y int) {
 	var speedlimit int = -30

@@ -1,13 +1,15 @@
+/*Le jeu se joue sur une grille rectangulaire de taille variable représentant une micro-puce.
+ Certaines cellules de la grille contiennent des nœuds d'alimentation. Les autres cellules sont vides.
+
+Le but est d'indiquer, s'ils existent, le voisin horizontal et le voisin vertical de chaque
+ nœud d'alimentation.*/
+
 package main
 
 import "fmt"
 import "os"
 import "bufio"
 import "strconv"
-
-/**
- * Don't let the machines win. You are humanity's last hope...
- **/
 
 type node struct {
 	x,y int
