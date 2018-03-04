@@ -1,0 +1,11 @@
+botter:
+  ☐ ajouter une méthode pour tapper sur l'adversaire quand le hero est hors range des sbires adverses @created(18-03-04 15:07)
+  ☐ ajouter une methode pour reculer quand le hero se prend des coups @created(18-03-04 14:51)
+  ☐ ajouter une methode pour reculer quand le hero se trouve trop pret de la tour adverse  @created(18-03-04 15:07)
+  ☐ supprimer et remplacer les playerhero & enemyhero par map playerHeros[index] @created(18-03-04 15:00)
+
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+Archive:
+ ✔ verifier les parametres health des heros @created(18-03-03 23:34) @done (18-03-04 15:14) @project(botter)
+ ✔ ajouter des maps pour contenir les heros @created(18-03-03 23:34) @done (18-03-04 14:59) @project(botter)
+ ✔ verifier les parametres ishit des minions @created(18-03-03 23:33) @done (18-03-04 14:50) @project(botter)
