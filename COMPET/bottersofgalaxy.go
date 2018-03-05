@@ -48,15 +48,32 @@ type hero struct {
 	isstun bool
 }
 
-func (hero *hero) moveBackMinions (minions map[int]minion, side int) {
-		var moveX int
-		moveX = hero.x
-		
-		for _, minion := range minions {
-			moveX = minion.x -100
-		}
+func (hero hero) moveBack (side int) {
+	var moveX int
+	moveX = hero.x
 
-		fmt.Fprintf(os.Stdout, "MOVE %d %d \n", moveX, 590)
+	if side == 0 {
+		moveX = hero.x - (hero.attackRange -10)
+	} else {
+		moveX = hero.x + (hero.attackRange -10)
+	}
+	fmt.Fprintf(os.Stderr, "MOVE %d %d \n", hero.x, side)
+	fmt.Fprintf(os.Stdout, "MOVE %d %d \n", moveX, 590)
+}
+
+func (hero hero) moveBackMinions (minions map[int]minion, side int) {
+	var moveX int
+	moveX = hero.x
+
+	for _, minion := range minions {
+		// le hero se trouve à gauche (0) sinon à droite (1)
+		if side == 0 {
+			moveX = minion.x - (hero.attackRange -10)
+		} else {
+			moveX = minion.x + (hero.attackRange -10)
+		}
+	}
+	fmt.Fprintf(os.Stdout, "MOVE %d %d \n", moveX, 590)
 }
 
 func (hero *hero) attackMinions (minions map[int]minion) {
@@ -90,7 +107,12 @@ type minion struct {
 }
 
 func (minion *minion) setHealth (health int) {
-	if health == minion.health { minion.ishit = false } else { minion.ishit = true; minion.health = health;}
+	if health == minion.health { 
+		minion.ishit = false 
+	} else { 
+		minion.ishit = true; 
+		minion.health = health;
+	}
 }
 
 func (minion *minion) setPos (x int, y int) {
@@ -103,7 +125,7 @@ func playersAreHit (heros map[int]hero) bool {
 	for _, hero := range heros {
 		if hero.ishit { result = true }
 	}
-	fmt.Fprintf(os.Stderr, "PLAYER GO BACK %t \n", result)
+	//fmt.Fprintf(os.Stderr, "PLAYER GO BACK %t \n", result)
 	return result
 }
 
@@ -153,12 +175,8 @@ func main() {
 
 	for {
 		var playerTower tower
-		var playerHero hero
-		//var playerMinions []minion
-		
 		var enemyTower tower
 		var enemyHero hero
-		//var enemyMinions []minion
 		
 		var gold int
 		fmt.Scan(&gold)
@@ -207,7 +225,7 @@ func main() {
 							unit.setPos(x, y)
 						}
 						playerHeros[unitId] = unit
-						playerHero = unit
+						//playerHero = unit
 					} else {
 						unit, exist := enemyHeros[unitId] 
 						if !exist {
@@ -229,6 +247,7 @@ func main() {
 							playerMinions[unitId] = unit
 						} else {
 							unit.setHealth(health)
+							//unit.setHealth(health)
 							unit.setPos(x, y)
 						}
 						playerMinions[unitId] = unit
@@ -239,26 +258,51 @@ func main() {
 							enemyMinions[unitId] = unit
 						} else {
 							unit.setHealth(health)
+							//unit.setHealth(health)
 							unit.setPos(x, y)
 						}
-						playerMinions[unitId] = unit
+						enemyMinions[unitId] = unit
 					}
 				}
 			}
 			//fmt.Fprintf(os.Stderr, "unitid %d team %d unitType %d x %d y %d attackRange %d health %d maxhealth %d shield %d attackdamage %d movementspeed %d stunduration %d goldvalue %d countdown1 %d countdown2 %d countdown3 %d mana %d maxmana %d manaregeneration %d herotype %d isvisible %d itemsowned %d \n", unitId, team, unitType, x, y, attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned)
 		}
 
-		if minionsAreHit(playerMinions) {
-			if playersAreHit(playerHeros) {
-				playerHero.moveBackMinions(playerMinions, myTeam)
-			} else {
-				playerHero.attackMinions(enemyMinions)
+		for key, minion := range playerMinions {
+			if minion.health < 200 {
+				delete(playerMinions, key)
 			}
-		} else {
-			playerHero.moveBackMinions(playerMinions, myTeam)
 		}
 
-		fmt.Fprintf(os.Stderr, "%d %d %d %d", playerTower, playerHero, enemyTower, enemyHero)
+		for key, minion := range enemyMinions {
+			if minion.health < 200 {
+				delete(enemyMinions, key)
+			}
+		}
+		fmt.Fprintf(os.Stderr, "LA VIE DES MINIONS !!!!! %d %d\n", len(playerMinions), len(enemyMinions));
+
+		if minionsAreHit(playerMinions) {
+			//fmt.Fprintf(os.Stderr, "ALERT BACK !!!!! %d \n", len(playerMinions), playerMinions);
+			if len(playerMinions) < 2 {
+				for _, hero := range playerHeros {
+					hero.moveBack(myTeam)
+				}
+			} else if playersAreHit(playerHeros) {
+				for _, hero := range playerHeros {
+					hero.moveBack(myTeam)
+				}
+			} else {
+				for _, hero := range playerHeros {
+					hero.attackMinions(enemyMinions)
+				}
+			}
+		} else {
+			for _, hero := range playerHeros {
+				hero.moveBackMinions(playerMinions, myTeam)
+			}
+		}
+
+		fmt.Fprintf(os.Stderr, "%d %d %d", playerTower, enemyTower, enemyHero)
 		// If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
 		// Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
 		// fmt.Println("ATTACK_NEAREST HERO")
