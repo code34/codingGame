@@ -61,24 +61,68 @@ func (hero hero) moveBack (side int) {
 	fmt.Fprintf(os.Stdout, "MOVE %d %d \n", moveX, 590)
 }
 
-func (hero hero) moveBackMinions (minions map[int]minion, side int) {
+func distance (distance1 int, distance2 int) int {
+	var result int
+	result = distance2 - distance1
+	if result < 0 { 
+		result = result * -1
+	}
+	fmt.Fprintf(os.Stderr, "DISTANCE CHECK %d \n ", result);
+	return result
+}
+
+func (hero hero) moveBackMinions (minions map[int]minion, side int) int {
 	var moveX int
 	moveX = hero.x
+	var maxX int
 
+	if side == 0 { maxX = hero.x } else { maxX = 1920}
 	for _, minion := range minions {
 		// le hero se trouve à gauche (0) sinon à droite (1)
 		if side == 0 {
-			moveX = minion.x - (hero.attackRange -10)
+			if minion.x > maxX { maxX = minion.x}
 		} else {
-			moveX = minion.x + (hero.attackRange -10)
+			if minion.x < maxX { maxX = minion.x}
 		}
 	}
-	fmt.Fprintf(os.Stdout, "MOVE %d %d \n", moveX, 590)
+
+	if side == 0 {
+		if maxX - hero.x < 30 {
+			moveX = maxX - (hero.attackRange -10)
+			if moveX < 100 { moveX = 100 }
+			return moveX
+		} else {
+			return -1
+		}
+	} else {
+		if hero.x - maxX < 30 {
+			moveX = maxX + (hero.attackRange -10)
+			if moveX > 1800 { moveX = 1800}
+			return moveX
+		} else{
+			return -1
+		}
+	}
+	return -1
 }
 
 func (hero *hero) attackMinions (minions map[int]minion) {
 	fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
 }
+
+/*func (hero *hero) attackHeros (enemyheros map[int]hero) {
+	var min int
+	min = 2000
+	var target hero
+
+	for _, enemy := range enemyheros {
+		if distance(enemy.x, hero.x) < min {
+			min = distance(enemy.x, hero.x)
+			target = enemy
+		}
+	}
+	fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
+}*/
 
 func (hero *hero) setHealth (health int) {
 	if health == hero.health { hero.ishit = false } else { hero.ishit = true; hero.health = health }
@@ -138,6 +182,18 @@ func minionsAreHit (minions map[int]minion) bool {
 	return result
 }
 
+func minionsLastHit (minions map[int]minion, damage int) int {
+	var result int
+	result = -1
+	for _, minion := range minions {
+		//fmt.Fprintf(os.Stderr, "LAST HIT %d %d \n", minion.health, damage);
+		if minion.health < damage {
+			result = minion.unitId
+			return result
+		}
+	}
+	return result
+}
 
 func main() {
 	var myTeam int
@@ -176,7 +232,6 @@ func main() {
 	for {
 		var playerTower tower
 		var enemyTower tower
-		var enemyHero hero
 		
 		var gold int
 		fmt.Scan(&gold)
@@ -235,7 +290,6 @@ func main() {
 							unit.setPos(x, y)
 						}
 						enemyHeros[unitId] = unit
-						enemyHero = unit
 					}
 				}
 				
@@ -268,6 +322,16 @@ func main() {
 			//fmt.Fprintf(os.Stderr, "unitid %d team %d unitType %d x %d y %d attackRange %d health %d maxhealth %d shield %d attackdamage %d movementspeed %d stunduration %d goldvalue %d countdown1 %d countdown2 %d countdown3 %d mana %d maxmana %d manaregeneration %d herotype %d isvisible %d itemsowned %d \n", unitId, team, unitType, x, y, attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned)
 		}
 
+
+		var minionToLastHit int
+		var enemyminionToLastHit int
+		var action int
+
+		for _, hero := range playerHeros {
+			minionToLastHit = minionsLastHit(playerMinions, hero.attackDamage)
+			enemyminionToLastHit = minionsLastHit(enemyMinions, hero.attackDamage)
+		}
+
 		for key, minion := range playerMinions {
 			if minion.health < 200 {
 				delete(playerMinions, key)
@@ -279,30 +343,55 @@ func main() {
 				delete(enemyMinions, key)
 			}
 		}
-		fmt.Fprintf(os.Stderr, "LA VIE DES MINIONS !!!!! %d %d\n", len(playerMinions), len(enemyMinions));
 
-		if minionsAreHit(playerMinions) {
-			//fmt.Fprintf(os.Stderr, "ALERT BACK !!!!! %d \n", len(playerMinions), playerMinions);
-			if len(playerMinions) < 2 {
-				for _, hero := range playerHeros {
+		for _, hero := range playerHeros {
+			if minionsAreHit(playerMinions) {
+				//fmt.Fprintf(os.Stderr, "ALERT BACK !!!!! %d \n", len(playerMinions), playerMinions);
+				if playersAreHit(playerHeros) {
 					hero.moveBack(myTeam)
-				}
-			} else if playersAreHit(playerHeros) {
-				for _, hero := range playerHeros {
-					hero.moveBack(myTeam)
+				} else if len(playerMinions) < 2 {
+					action = hero.moveBackMinions(playerMinions, myTeam)
+					if action > -1 {
+						fmt.Fprintf(os.Stderr, "ALERT BACK !!!!! %d \n", action);
+						fmt.Fprintf(os.Stdout, "MOVE %d %d \n", action, 590)
+					} else {
+						hero.attackMinions(enemyMinions)
+					}
+				} else if minionToLastHit > -1 {
+					fmt.Fprintf(os.Stdout, "ATTACK %d \n", minionToLastHit)
+				 } else {
+				 	if enemyminionToLastHit > -1 {
+				 		fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyminionToLastHit)
+				 	} else {
+				 		if len(enemyMinions) == 1 {
+							//hero.attackHeros(enemyHeros)
+							fmt.Fprintf(os.Stdout, "ATTACK_NEAREST HERO \n")
+						} else {
+							hero.attackMinions(enemyMinions)
+						}
+					}
 				}
 			} else {
-				for _, hero := range playerHeros {
-					hero.attackMinions(enemyMinions)
+				action = hero.moveBackMinions(playerMinions, myTeam)
+				if action > -1 {
+					fmt.Fprintf(os.Stderr, "ALERT BACK2 !!!!! %d \n", action);
+					fmt.Fprintf(os.Stdout, "MOVE %d %d \n", action, 590)
+				} else {
+				 	if enemyminionToLastHit > -1 {
+				 		fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyminionToLastHit)
+				 	} else {
+						if len(enemyMinions) == 1 {
+							//hero.attackHeros(enemyHeros)
+							fmt.Fprintf(os.Stdout, "ATTACK_NEAREST HERO \n")
+						} else {
+							hero.attackMinions(enemyMinions)
+						}
+					}
 				}
-			}
-		} else {
-			for _, hero := range playerHeros {
-				hero.moveBackMinions(playerMinions, myTeam)
 			}
 		}
 
-		fmt.Fprintf(os.Stderr, "%d %d %d", playerTower, enemyTower, enemyHero)
+		fmt.Fprintf(os.Stderr, "%d %d \n", playerTower, enemyTower)
 		// If roundType has a negative value then you need to output a Hero name, such as "DEADPOOL" or "VALKYRIE".
 		// Else you need to output roundType number of any valid action, such as "WAIT" or "ATTACK unitId"
 		// fmt.Println("ATTACK_NEAREST HERO")

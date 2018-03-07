@@ -1,12 +1,14 @@
 botter:
+  ☐ corriger le bug du moveback(hero) @created(18-03-07 01:19)
+  ☐ vérifier quand team 1 ( à droite) que le last hit sur les minions fonctionne @created(18-03-07 01:10)
   ☐ ajouter une méthode pour se planquer dans les bushs @created(18-03-06 00:45)
   ☐ attacker les minions qui ont moins de vie / vérifier si les towers last hit et du coup pas de gold pour le champion @created(18-03-06 00:45)
   ☐ ajouter une méthode pour gérer les objets @created(18-03-06 00:43)
-  ☐ ajouter une méthode pour gérer les last hits + gold sur minions alliés @created(18-03-06 00:43)
   ☐ ajouter une méthode pour tapper sur l'adversaire quand le hero est hors range des sbires adverses @created(18-03-04 15:07)
   ☐ ajouter une methode pour reculer quand le hero se trouve trop pret de la tour adverse  @created(18-03-04 15:07)
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ faire des last hits sur ses propres minions pour récupérer du gold @created(18-03-06 21:52) @done (18-03-07 01:08) @project(botter)
  ✔ gerer le coté sur lequel on apparait @created(18-03-04 20:58) @done (18-03-06 00:42) @project(botter)
  ✔ supprimer et remplacer les playerhero & enemyhero par map playerHeros[index] @created(18-03-04 15:00) @done (18-03-06 00:41) @project(botter)
  ✔ ajouter une methode pour reculer quand le hero se prend des coups @created(18-03-04 14:51) @done (18-03-06 00:40) @project(botter)
