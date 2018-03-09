@@ -49,7 +49,7 @@ type hero struct {
 	isstun bool
 }
 
-func (hero hero) moveBack (side int) {
+func (hero hero) moveBack (side int, reason string) {
 	var moveX int
 	moveX = hero.x
 
@@ -58,7 +58,7 @@ func (hero hero) moveBack (side int) {
 	} else {
 		moveX = hero.x + (hero.attackRange -10)
 	}
-	fmt.Fprintf(os.Stderr, "JE MOVEEEEEEE BACK %d %d \n", hero.x, side)
+	fmt.Fprintf(os.Stderr, "JE MOVE BACK %s \n", reason)
 	fmt.Fprintf(os.Stdout, "MOVE %d %d \n", moveX, 590)
 }
 
@@ -71,6 +71,9 @@ func distance (x1, x2, y1, y2 int) int {
 	return int(z)
 }
 
+// Le hero se replie en arrière d'une distance d'attack
+// du minion le plus avancé sur la ligne
+// sinon renvoie -1 pour dire qu'il ne faut pas se déplacer
 func (hero hero) moveBackMinions (minions map[int]minion, side int) int {
 	var moveX int
 	moveX = hero.x
@@ -89,7 +92,7 @@ func (hero hero) moveBackMinions (minions map[int]minion, side int) int {
 	if side == 0 {
 		if maxX - hero.x < 30 {
 			moveX = maxX - (hero.attackRange -10)
-			if moveX < 100 { moveX = 100 }
+			if moveX < 10 { moveX = 10 }
 			return moveX
 		} else {
 			return -1
@@ -97,13 +100,53 @@ func (hero hero) moveBackMinions (minions map[int]minion, side int) int {
 	} else {
 		if hero.x - maxX < 30 {
 			moveX = maxX + (hero.attackRange -10)
-			if moveX > 1800 { moveX = 1800}
+			if moveX > 1910 { moveX = 1910}
 			return moveX
 		} else{
 			return -1
 		}
 	}
 	return -1
+}
+
+func countMinionsFrontOfPos (minions map[int]minion, side int, x int) int {
+	var count int
+	for _, minion := range minions {
+		// le hero se trouve à gauche (0) sinon à droite (1)
+		if side == 0 {
+			if minion.x >= x { count++}
+		} else {
+			if minion.x <= x { count++}
+		}
+	}
+	return count
+}
+
+func (hero *hero) countMinionsFront (minions map[int]minion, side int) int {
+	var count int
+	for _, minion := range minions {
+		// le hero se trouve à gauche (0) sinon à droite (1)
+		if side == 0 {
+			if minion.x >= hero.x { count++}
+		} else {
+			if minion.x <= hero.x { count++}
+		}
+	}
+	return count
+}
+
+func (hero *hero) attackLeastHealthMinions (minions map[int]minion) int {
+	var min int
+	var result int
+	min = 2000
+	result = -1
+	for _, minion := range minions {
+		if minion.health < min && distance(hero.x, minion.x, hero.y, minion.y) < hero.attackRange {
+			min = distance(hero.x, minion.x, hero.y, minion.y)
+			result = minion.unitId
+		}
+	}
+	return result
 }
 
 func (hero *hero) attackMinions (minions map[int]minion) int {
@@ -115,20 +158,6 @@ func (hero *hero) attackMinions (minions map[int]minion) int {
 	return -1
 }
 
-/*func (hero *hero) attackHeros (enemyheros map[int]hero) {
-	var min int
-	min = 2000
-	var target hero
-
-	for _, enemy := range enemyheros {
-		if distance(enemy.x, hero.x) < min {
-			min = distance(enemy.x, hero.x)
-			target = enemy
-		}
-	}
-	fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
-}*/
-
 func (hero *hero) setHealth (health int) {
 	if health == hero.health { hero.ishit = false } else { hero.ishit = true; hero.health = health }
 }
@@ -136,6 +165,7 @@ func (hero *hero) setHealth (health int) {
 func (hero *hero) setPos (x int, y int) {
 	if x == hero.x && y == hero.y { hero.isstun = true } else { hero.isstun = false; hero.x = x; hero.y = y }
 }
+
 
 type minion struct {
 	unitId int
@@ -308,7 +338,6 @@ func main() {
 							playerMinions[unitId] = unit
 						} else {
 							unit.setHealth(health)
-							//unit.setHealth(health)
 							unit.setPos(x, y)
 						}
 						playerMinions[unitId] = unit
@@ -319,7 +348,6 @@ func main() {
 							enemyMinions[unitId] = unit
 						} else {
 							unit.setHealth(health)
-							//unit.setHealth(health)
 							unit.setPos(x, y)
 						}
 						enemyMinions[unitId] = unit
@@ -334,12 +362,23 @@ func main() {
 		minionToLastHit = -1
 		var enemyminionToLastHit int
 		var action int
+		var movebackpos int
+		var numberofminionsfront int
+		var numberofenemyminionsfront int
+		var enemytowerdistance int
 
 		for _, hero := range playerHeros {
 			if len(playerMinions) > len(enemyMinions) {
 				minionToLastHit = minionsLastHit(playerMinions, hero.attackDamage)
 			}
 			enemyminionToLastHit = minionsLastHit(enemyMinions, hero.attackDamage)
+			if enemyminionToLastHit > -1 {
+				if countMinionsFrontOfPos(playerMinions, myTeam, enemyMinions[enemyminionToLastHit].x) < 3 {enemyminionToLastHit = -1}
+			}
+			movebackpos = hero.moveBackMinions(playerMinions, myTeam)
+			numberofminionsfront = hero.countMinionsFront(playerMinions, myTeam)
+			numberofenemyminionsfront = hero.countMinionsFront(enemyMinions, myTeam)
+			enemytowerdistance = distance(hero.x, enemyTower.x, hero.y, enemyTower.y)
 		}
 
 		for key, minion := range playerMinions {
@@ -355,68 +394,41 @@ func main() {
 		}
 
 		for _, hero := range playerHeros {
-			if distance(hero.x, enemyTower.x, hero.y, enemyTower.y) < enemyTower.attackRange + 200 {
-				hero.moveBack(myTeam)
-			} else if minionsAreHit(playerMinions) {
-				//fmt.Fprintf(os.Stderr, "ALERT BACK !!!!! %d \n", len(playerMinions), playerMinions);
-				if playersAreHit(playerHeros) {
-					hero.moveBack(myTeam)
-				} else if len(playerMinions) < 2 {
-					action = hero.moveBackMinions(playerMinions, myTeam)
-					if action > -1 {
-						fmt.Fprintf(os.Stdout, "MOVE %d %d \n", action, 590)
-					} else {
-						action = hero.attackMinions(enemyMinions)
-						fmt.Fprintf(os.Stderr, "BLOQUE %d \n", action)
-						if action > -1 {
-							fmt.Fprintf(os.Stdout, "ATTACK %d \n", action)
-						} else {
-							fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
-						}
-					}
-				} else if minionToLastHit > -1 {
-					fmt.Fprintf(os.Stderr, "MINION TO LAST HIT %d \n", minionToLastHit)
-					fmt.Fprintf(os.Stdout, "ATTACK %d \n", minionToLastHit)
-				 } else {
-				 	if enemyminionToLastHit > -1 {
-				 		fmt.Fprintf(os.Stderr, "MINION TO LAST HIT %d \n", enemyminionToLastHit)
-				 		fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyminionToLastHit)
-				 	} else {
-				 		if len(enemyMinions) == 1 {
-							fmt.Fprintf(os.Stdout, "ATTACK_NEAREST HERO \n")
-						} else {
-							action = hero.attackMinions(enemyMinions)
-							fmt.Fprintf(os.Stderr, "BLOQUE %d \n", action)
-							if action > -1 {
-								fmt.Fprintf(os.Stdout, "ATTACK %d \n", action)
-							} else {
-								fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
-							}
-						}
-					}
-				}
+			// On se replie si le hero est trop proche de la tour enemie
+			if enemytowerdistance < (enemyTower.attackRange + 100) || numberofminionsfront < 2 {
+				fmt.Fprintf(os.Stderr, "MINIONS FRONT %d \n", numberofminionsfront)
+				hero.moveBack(myTeam, "UNDER TOWER")
+			//Si les minions alliés ne sont pas agros et que le hero doit se replier
+			} else if !minionsAreHit(playerMinions) && movebackpos > -1 {
+				fmt.Fprintf(os.Stderr, "MOVE BACK MINIONS %d \n", movebackpos)
+				fmt.Fprintf(os.Stdout, "MOVE %d %d \n", movebackpos, 590)
+			// On se replie si notre hero est touché
+			} else if playersAreHit(playerHeros) {
+				fmt.Fprintf(os.Stderr, "HERO IS HIT \n")
+				hero.moveBack(myTeam, "HERO IS HIT")
+			} else if minionToLastHit > -1 {
+				// on last hit le minion allié
+				fmt.Fprintf(os.Stderr, "MINION TO LAST HIT %d \n", minionToLastHit)
+				fmt.Fprintf(os.Stdout, "ATTACK %d \n", minionToLastHit)
+			 } else if enemyminionToLastHit > -1 {
+			 	// on last hit le minion enemie
+		 		fmt.Fprintf(os.Stderr, "ENEMY MINION TO LAST HIT %d \n", enemyminionToLastHit)
+		 		fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyminionToLastHit)
+			} else if numberofenemyminionsfront < 2 && enemytowerdistance < (enemyTower.attackRange + 200) {
+				fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyTower.unitId)
+			} else if len(enemyMinions) == 1 && distance(hero.x, hero.y, enemyHeros[0].x, enemyHeros[0].y) < 200 && enemytowerdistance > (enemyTower.attackRange + 100) {
+			 	// on kill le hero enemie
+			 	fmt.Fprintf(os.Stderr, "ATTACK_NEAREST HERO %d \n", enemyHeros[0].x)
+				fmt.Fprintf(os.Stdout, "ATTACK_NEAREST HERO \n")
 			} else {
-				action = hero.moveBackMinions(playerMinions, myTeam)
+				action = hero.attackLeastHealthMinions(enemyMinions)
 				if action > -1 {
-					fmt.Fprintf(os.Stdout, "MOVE %d %d \n", action, 590)
+					fmt.Fprintf(os.Stderr, "ATTACK LESS HEALTH MINIONS %d \n", action)
+					fmt.Fprintf(os.Stdout, "ATTACK %d \n", action)
 				} else {
-					if playersAreHit(playerHeros) {
-						hero.moveBack(myTeam)
-				 	} else if enemyminionToLastHit > -1 {
-				 		fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyminionToLastHit)
-				 	} else {
-						if len(enemyMinions) == 1 {
-							fmt.Fprintf(os.Stdout, "ATTACK_NEAREST HERO \n")
-						} else {
-							action = hero.attackMinions(enemyMinions)
-							fmt.Fprintf(os.Stderr, "BLOQUE %d \n", action)
-							if action > -1 {
-								fmt.Fprintf(os.Stdout, "ATTACK %d \n", action)
-							} else {
-								fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
-							}
-						}
-					}
+					// On tue les minions les plus proches
+					fmt.Fprintf(os.Stderr, "ATTACK GARBAGE MINIONS %d \n", action)
+					fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
 				}
 			}
 		}
