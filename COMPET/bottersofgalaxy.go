@@ -47,7 +47,7 @@ type hero struct {
 	itemsOwned int
 	ishit bool
 	isstun bool
-	ishitbyhero bool
+	iscritical int
 }
 
 func (hero *hero) moveBack (tower tower, reason string) {
@@ -124,6 +124,18 @@ func countMinionsFrontOfPos (minions map[int]minion, side int, x int) int {
 	return count
 }
 
+func findWeaskest (heros map[int]hero) hero {
+	var result hero
+	max := 3000
+	for _, myhero := range heros {
+		if myhero.health < max {
+			max = myhero.health
+			result = myhero
+		}
+	}
+	return result
+}
+
 func (hero *hero) countMinionsFront (minions map[int]minion, side int) int {
 	var count int
 	for _, minion := range minions {
@@ -163,7 +175,11 @@ func (hero *hero) attackMinions (minions map[int]minion) int {
 func (hero *hero) setHealth (health int) {
 	if health == hero.health { 
 		hero.ishit = false
+		if hero.iscritical > 0 {
+			hero.iscritical--
+		}
 	} else { 
+		hero.iscritical++
 		hero.ishit = true
 		hero.health = health
 	}
@@ -172,7 +188,6 @@ func (hero *hero) setHealth (health int) {
 func (hero *hero) setPos (x int, y int) {
 	if x == hero.x && y == hero.y { hero.isstun = true } else { hero.isstun = false; hero.x = x; hero.y = y }
 }
-
 
 type minion struct {
 	unitId int
@@ -293,8 +308,9 @@ func buy (items map[string]item, itemname string, gold int, heroItem *[]item) bo
 }
 
 func main() {
-	var myTeam int
+	var myTeam,enemyTeam int
 	fmt.Scan(&myTeam)
+	if myTeam == 0 { enemyTeam = 1 } else { enemyTeam = 0}
 	
 	// bushAndSpawnPointCount: usefrul from wood1, represents the number of bushes and the number of places where neutral units can spawn
 	var bushAndSpawnPointCount int
@@ -328,6 +344,7 @@ func main() {
 	enemyMinions := make(map[int]minion)
 	playerHeros := make(map[int]hero)
 	enemyHeros := make(map[int]hero)
+	var sortedplayerHeros []int
 	var heroItem []item
 	countheros := 0
 
@@ -373,6 +390,7 @@ func main() {
 			var isVisible, itemsOwned int
 			fmt.Scan(&unitId, &team, &unitType, &x, &y, &attackRange, &health, &maxHealth, &shield, &attackDamage, &movementSpeed, &stunDuration, &goldValue, &countDown1, &countDown2, &countDown3, &mana, &maxMana, &manaRegeneration, &heroType, &isVisible, &itemsOwned)
 
+			aliveunit= append(aliveunit, unitId)
 			switch (unitType) {
 				case "TOWER" : {
 					unit:= tower{ unitId, team, unitType, x, y, attackRange, health, maxHealth,attackDamage }
@@ -381,29 +399,36 @@ func main() {
 				
 				case "HERO" : {
 					if team == myTeam { 
+						fmt.Fprintf(os.Stderr, "TYPE %s %d \n", heroType, unitId)
 						unit, exist := playerHeros[unitId] 
 						if !exist {
-							unit = hero{ unitId, team,unitType, x, y,attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned, true, false,false}
+							unit = hero{ unitId, team,unitType, x, y,attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned, true, false, 0}
+							sortedplayerHeros = append(sortedplayerHeros, unitId)
 						} else {
 							unit.setHealth(health)
 							unit.setPos(x, y)
+							unit.countDown1 = countDown1
+							unit.countDown2 = countDown2
+							unit.countDown3 = countDown3
 						}
 						playerHeros[unitId] = unit
 						//playerHero = unit
 					} else {
 						unit, exist := enemyHeros[unitId] 
 						if !exist {
-							unit = hero{ unitId, team,unitType, x, y,attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned, true, false,false}
+							unit = hero{ unitId, team,unitType, x, y,attackRange, health, maxHealth, shield, attackDamage, movementSpeed, stunDuration, goldValue, countDown1, countDown2, countDown3, mana, maxMana, manaRegeneration, heroType, isVisible, itemsOwned, true, false, 0}
 						} else {
 							unit.setHealth(health)
 							unit.setPos(x, y)
+							unit.countDown1 = countDown1
+							unit.countDown2 = countDown2
+							unit.countDown3 = countDown3
 						}
 						enemyHeros[unitId] = unit
 					}
 				}
 				
 				case "UNIT" : {
-					aliveunit= append(aliveunit, unitId)
 					if team == myTeam { 
 						unit, exist := playerMinions[unitId] 
 						if !exist {
@@ -440,20 +465,6 @@ func main() {
 		var numberofenemyminionsfront int
 		var enemytowerdistance int
 
-		for _, hero := range playerHeros {
-			if len(playerMinions) > len(enemyMinions) {
-				minionToLastHit = minionsLastHit(playerMinions, hero.attackDamage)
-			}
-			enemyminionToLastHit = minionsLastHit(enemyMinions, hero.attackDamage)
-			if enemyminionToLastHit > -1 {
-				if countMinionsFrontOfPos(playerMinions, myTeam, enemyMinions[enemyminionToLastHit].x) < 3 {enemyminionToLastHit = -1}
-			}
-			movebackpos = hero.moveBackMinions(playerMinions, myTeam)
-			numberofminionsfront = hero.countMinionsFront(playerMinions, myTeam)
-			numberofenemyminionsfront = hero.countMinionsFront(enemyMinions, myTeam)
-			enemytowerdistance = distance(hero.x, enemyTower.x, hero.y, enemyTower.y)
-		}
-
 		for key, _ := range playerMinions {
 			todelete := true
 			for _, alive := range aliveunit {
@@ -478,19 +489,96 @@ func main() {
 			}
 		}
 
-		for _, hero := range playerHeros {
-			// On se replie si le hero est trop proche de la tour enemie
-			if enemytowerdistance < (enemyTower.attackRange + 100) || numberofminionsfront < 2 {
+		for key, _ := range playerHeros {
+			todelete := true
+			for _, alive := range aliveunit {
+				if alive == key { 
+					todelete = false
+				}
+			}
+			if todelete {
+				delete(playerHeros , key)
+			}
+		}
+
+		for key, _ := range enemyHeros {
+			todelete := true
+			for _, alive := range aliveunit {
+				if alive == key { 
+					todelete = false
+				}
+			}
+			if todelete {
+				delete(enemyHeros, key)
+			}
+		}
+
+		weakesthero := findWeaskest(enemyHeros)
+		numberofminionsfrontweakest := weakesthero.countMinionsFront(enemyMinions, enemyTeam)
+
+		//for _, value := range sortedplayerHeros {
+		for i:= len(sortedplayerHeros) - 1 ; i > -1 ; i-- {
+			value := sortedplayerHeros[i]
+			thehero := playerHeros[value]
+			var nearestEnemyhero hero
+			distancemax := 3000
+			for _, enemyHero := range enemyHeros {
+				if distance(enemyHero.x, thehero.x, enemyHero.y, thehero.y) < distancemax {
+					distancemax = distance(enemyHero.x, thehero.x, enemyHero.y, thehero.y)
+					nearestEnemyhero = enemyHero
+				}
+			}
+
+			//if len(playerMinions) > len(enemyMinions) {
+			minionToLastHit = minionsLastHit(playerMinions, thehero.attackDamage)
+			//}
+			enemyminionToLastHit = minionsLastHit(enemyMinions, thehero.attackDamage)
+			if enemyminionToLastHit > -1 {
+				if countMinionsFrontOfPos(playerMinions, myTeam, enemyMinions[enemyminionToLastHit].x) < 3 {enemyminionToLastHit = -1}
+			}
+			movebackpos = thehero.moveBackMinions(playerMinions, myTeam)
+			numberofminionsfront = thehero.countMinionsFront(playerMinions, myTeam)
+			numberofenemyminionsfront = thehero.countMinionsFront(enemyMinions, myTeam)
+			enemytowerdistance = distance(thehero.x, enemyTower.x, thehero.y, enemyTower.y)
+
+			if enemytowerdistance > enemyTower.attackRange && numberofminionsfrontweakest < 2{
+				if thehero.countDown1 == 0 && thehero.mana > 49 {
+					switch thehero.heroType {
+						case "HULK" :
+							fmt.Fprintf(os.Stdout, "CHARGE %d \n", weakesthero.unitId)
+						case "DOCTOR_STRANGE":
+							fmt.Fprintf(os.Stdout, "AOEHEAL %d %d \n", thehero.x, thehero.y)
+					}
+				} else if thehero.countDown2 == 0 && thehero.mana > 40{
+					switch thehero.heroType {
+						case "HULK" :
+							fmt.Fprintf(os.Stdout, "EXPLOSIVESHIELD\n")
+						case "DOCTOR_STRANGE":
+							fmt.Fprintf(os.Stdout, "SHIELD %d \n", thehero.unitId)
+					}
+				} else if thehero.countDown3 == 0 && thehero.mana > 40 {
+					switch thehero.heroType {
+						case "HULK" :
+							fmt.Fprintf(os.Stdout, "BASH %d \n", weakesthero.unitId)
+						case "DOCTOR_STRANGE":
+							fmt.Fprintf(os.Stdout, "PULL %d \n", weakesthero.unitId)
+					}
+				} else {
+					fmt.Fprintf(os.Stderr, "ATTACK BANZAI %d \n", weakesthero.unitId)
+					fmt.Fprintf(os.Stdout, "ATTACK %d \n", weakesthero.unitId)
+				}
+			} else if enemytowerdistance < (enemyTower.attackRange + 100) || numberofminionsfront < 1 {
+				// On se replie si le hero est trop proche de la tour enemie
 				fmt.Fprintf(os.Stderr, "MINIONS FRONT %d \n", numberofminionsfront)
-				hero.moveBack(playerTower, "NO MINIONS FRONT")
-			//Si les minions alliés ne sont pas agros et que le hero doit se replier
+				thehero.moveBack(playerTower, "NO MINIONS FRONT")
 			} else if !minionsAreHit(playerMinions) && movebackpos > -1 {
+				//Si les minions alliés ne sont pas agros et que le hero doit se replier
 				fmt.Fprintf(os.Stderr, "MOVE BACK MINIONS %d \n", movebackpos)
-				fmt.Fprintf(os.Stdout, "MOVE %d %d \n", movebackpos, hero.y)
-			// On se replie si notre hero est touché
-			} else if hero.ishit {
+				fmt.Fprintf(os.Stdout, "MOVE %d %d \n", movebackpos, thehero.y)
+			//} else if thehero.iscritical > 5 && thehero.health < 400 {
+				// On se replie si notre hero est touché
 				//fmt.Fprintf(os.Stderr, "HERO IS HIT \n")
-				hero.moveBack(playerTower, "HERO IS HIT")
+			//	thehero.moveBack(playerTower, "HERO IS HIT")
 			} else if minionToLastHit > -1 {
 				// on last hit le minion allié
 				fmt.Fprintf(os.Stderr, "MINION TO LAST HIT %d \n", minionToLastHit)
@@ -502,30 +590,30 @@ func main() {
 		 		fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyminionToLastHit)
 		 		delete(enemyMinions, minionToLastHit)
 			} else if numberofenemyminionsfront < 2 && enemytowerdistance < (enemyTower.attackRange + 200) {
+				// on attack la tour enemie si plus de minions
 				fmt.Fprintf(os.Stdout, "ATTACK %d \n", enemyTower.unitId)
-			} else if len(enemyMinions) == 1 && distance(hero.x, hero.y, enemyHeros[0].x, enemyHeros[0].y) < 200 && enemytowerdistance > (enemyTower.attackRange + 100) {
+			} else if len(enemyMinions) < 3 && distance(thehero.x, thehero.y, nearestEnemyhero.x, nearestEnemyhero.y) < 200 && enemytowerdistance > (enemyTower.attackRange + 100) {
 			 	// on kill le hero enemie
-			 	fmt.Fprintf(os.Stderr, "ATTACK_NEAREST HERO %d \n", enemyHeros[0].x)
-				fmt.Fprintf(os.Stdout, "ATTACK_NEAREST HERO \n")
+			 	fmt.Fprintf(os.Stderr, "ATTACK NEAREST HERO %d \n", nearestEnemyhero.unitId)
+				fmt.Fprintf(os.Stdout, "ATTACK %d \n", nearestEnemyhero.unitId)
 			} else {
-				action = hero.attackLeastHealthMinions(enemyMinions)
-				//action = -1
+				action = thehero.attackLeastHealthMinions(enemyMinions)
 				if action > -1 {
 					fmt.Fprintf(os.Stderr, "ATTACK LESS HEALTH MINIONS %d \n", action)
 					fmt.Fprintf(os.Stdout, "ATTACK %d \n", action)
 					unit := enemyMinions[action]
-					unit.setHealth(unit.health - hero.attackDamage)
+					unit.setHealth(unit.health - thehero.attackDamage)
 				} else {
 					// On tue les minions les plus proches
-					if gold > 200 && len(heroItem) < 5 {
+					if gold > 400 && len(heroItem) < 3 {
 						fmt.Fprintf(os.Stderr, "HERO COUNT ITEMS %d %d\n", len(heroItem), heroItem)
-						if hero.health < 400 { 
+						if thehero.health < 400 { 
 							buy(items, "healthpotion", gold, &heroItem)
 						} else {
 							buy(items, "weapon", gold, &heroItem)
 						}
 					} else {
-						fmt.Fprintf(os.Stderr, "ATTACK GARBAGE MINIONS %d \n", action)
+						fmt.Fprintf(os.Stderr, "ATTACK NEAREST GARBAGE MINIONS  \n")
 						fmt.Fprintf(os.Stdout, "ATTACK_NEAREST UNIT \n")
 					}
 				}
