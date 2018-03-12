@@ -1,4 +1,4 @@
-#Botters of Galaxy
+Botters of Galaxy
 
 Codingamge code for the competition of botters of galaxy. Ugly code for this first go competition.
 
