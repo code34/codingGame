@@ -8,96 +8,70 @@ import "os"
  * the standard input according to the problem statement.
  **/
 
-func parseTree(tableau []node, index int, topvalue int, botvalue int) (int, int) {
-	var max int
-	topvalue += 1
-	tableau[index].topvalue = topvalue
-	if len(tableau[index].fils) > 0 {botvalue = 1}
-	for _,element := range tableau[index].fils {
-		_,temp := parseTree(tableau, element, topvalue, botvalue)
-		//fmt.Fprintf(os.Stderr, "data:%d %d\n", element, temp)
-		if temp > max { max = temp }
-	} 
-	tableau[index].botvalue = (botvalue + max)
-	return topvalue, (botvalue + max)
+type node struct {
+	current int   
+	voisin []node
+	value int
 }
 
-func findTop(tableau []node, start int) int{
-	var top int
-	var run bool
-	run = true
-	
-	top = tableau[start].pere
-	for run {
-		if tableau[top].pere > 0 {
-			top = tableau[top].pere
-		} else {
-			run = false   
+func (node *node) recurse (counter int) int {
+	max := counter
+	for _, thenode := range node.voisin {
+		counter++
+		result:= thenode.recurse(counter)
+		if result > max {
+			max = result
 		}
 	}
-	return top
+	fmt.Fprintf(os.Stderr, "max: %d\n", node.current)
+	return max
 }
 
-type node struct {
-	pere int
-	fils []int
-	topvalue int
-	botvalue int
-}
-
-func (this *node) addFils(element int) {
-	this.fils = append(this.fils, element)
+func (funcnode *node) exist (current int) (*node, bool) {
+	result := node{current, []node{}, 0}
+	if funcnode.current == current { 
+		return funcnode, true
+	} else {
+		for _,thenode := range funcnode.voisin {
+			theresult, success := thenode.exist(current)
+			if success { return theresult, success }
+		}
+	}
+	return &result, false
 }
 
 func main() {
 	// n: the number of adjacency relations
-	var n,max,top int
+	
+	var n int
 	fmt.Scan(&n)
 	
-	//var tableau []node
-	//mymap := make(map[int]node)
-	//var tableau [5]node
-	var tableau = make([]node,2000,2000) 
-
+	firstnode := node {}
+	
 	for i := 0; i < n; i++ {
 		// xi: the ID of a person which is adjacent to yi
 		// yi: the ID of a person which is adjacent to xi
 		var xi, yi int
 		fmt.Scan(&xi, &yi)
-		if top == 0 { top = xi }
-		tableau[xi].addFils(yi)
-		tableau[yi].pere = xi
-		fmt.Fprintf(os.Stderr, "data:%d %d\n", xi, yi)
-	}
-
-	top = findTop(tableau, top)
-	parseTree(tableau, top, -1, -1)
-	fmt.Fprintf(os.Stderr, "top:%d tree:%d\n", top, tableau)
-	
-	var oldtop int
-	var oldbot int
-	var finish bool
-	var index int
-	index = top
-	finish = true
-
-	for finish { 
-		if tableau[index].botvalue == tableau[index].topvalue {
-			max = tableau[index].botvalue
-			if len (tableau[tableau[index].pere].fils) > 1 {
-				oldtop = tableau[tableau[index].pere].topvalue
-				oldbot = tableau[tableau[index].pere].botvalue
-				if oldtop > oldbot { max = oldtop } else { max = oldbot } 
-			}
-			finish = false
-			fmt.Fprintf(os.Stderr, "MAX:%d count:%d index: %d\n", max,index)
-		}
-		if index == len(tableau) { finish = false }
-		index = tableau[index].fils[0]
+		fmt.Fprintf(os.Stderr, "x:%d y:%d \n", xi, yi)
+		
+		currentnode,_ := firstnode.exist(xi)
+		newnodeyi,_ := firstnode.exist(yi)
+		if i == 0 { firstnode = *currentnode }
+		currentnode.voisin = append(currentnode.voisin, *newnodeyi)
+		//fmt.Fprintf(os.Stderr, "current: %d \n", firstnode)
 	}
 	
-	//fmt.Fprintf(os.Stderr, "max:%d count:%d index: %d\n", max, count, index)
+	//for i:= 0; i < len(liste) - 1; i++ {
+		//currentnode := liste[i]
+		result := firstnode.recurse(0)
+		fmt.Fprintf(os.Stderr, "current: %d \n", result)
+		//if result > 0 { currentnode.value = result }
+	//}
 	
+	//fmt.Fprintf(os.Stderr, "liste:%d \n", liste)
+	
+	// fmt.Fprintln(os.Stderr, "Debug messages...")
 	// The minimal amount of steps required to completely propagate the advertisement
-	fmt.Println(max)
+	fmt.Println("1")
 }
