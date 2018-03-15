@@ -1,77 +1,98 @@
 package main
 
 import "fmt"
-import "os"
+//import "os"
 
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
  **/
-
+ 
 type node struct {
-	current int   
-	voisin []node
+	current int
+	ptrnode *node
+	references []reference
+}
+
+type reference struct {
 	value int
+	ptrnode *node
 }
 
-func (node *node) recurse (counter int) int {
-	max := counter
-	for _, thenode := range node.voisin {
-		counter++
-		result:= thenode.recurse(counter)
-		if result > max {
-			max = result
-		}
+func (node *node) setCurrent (value int) {
+	node.current = value    
+}
+
+func (node *node) addReference (value int, ptrnode *node) {
+	newref:= reference{value, ptrnode}
+	node.references = append(node.references, newref)
+}
+
+func (node *node) recurse (counter int, source *node) int {
+	max := 0
+	if len(node.references) == 1 && counter > 1 { return counter }
+	counter++
+	//fmt.Fprintf(os.Stderr, "NODE: %d\n", node.current)
+	for _,reference := range node.references {
+			if source != reference.ptrnode {
+				var result int
+				tmpsource := node
+				if reference.value == 0 {
+					result = reference.ptrnode.recurse(counter, tmpsource)
+					reference.value = result
+				} else {
+					result = reference.value
+				}
+				if result > max { max = result }
+			}
 	}
-	fmt.Fprintf(os.Stderr, "max: %d\n", node.current)
+	//fmt.Fprintf(os.Stderr, "RESULTS: %d\n", max)
 	return max
-}
-
-func (funcnode *node) exist (current int) (*node, bool) {
-	result := node{current, []node{}, 0}
-	if funcnode.current == current { 
-		return funcnode, true
-	} else {
-		for _,thenode := range funcnode.voisin {
-			theresult, success := thenode.exist(current)
-			if success { return theresult, success }
-		}
-	}
-	return &result, false
 }
 
 func main() {
 	// n: the number of adjacency relations
-	
 	var n int
-	fmt.Scan(&n)
+	mymap := make(map[int]*node)
 	
-	firstnode := node {}
+	fmt.Scan(&n)
 	
 	for i := 0; i < n; i++ {
 		// xi: the ID of a person which is adjacent to yi
 		// yi: the ID of a person which is adjacent to xi
 		var xi, yi int
 		fmt.Scan(&xi, &yi)
-		fmt.Fprintf(os.Stderr, "x:%d y:%d \n", xi, yi)
 		
-		currentnode,_ := firstnode.exist(xi)
-		newnodeyi,_ := firstnode.exist(yi)
-		if i == 0 { firstnode = *currentnode }
-		currentnode.voisin = append(currentnode.voisin, *newnodeyi)
-		//fmt.Fprintf(os.Stderr, "current: %d \n", firstnode)
+		newnode,_ := mymap[xi]
+		if newnode == nil {
+			tmpnode := node{}
+			newnode = &tmpnode
+		}
+		
+		targetnode,_ := mymap[yi]
+		if targetnode == nil {
+			tmpnode2 := node{}
+			targetnode = &tmpnode2
+		}
+		
+		newnode.setCurrent(xi)
+		targetnode.setCurrent(yi)
+		newnode.addReference(0, targetnode)
+		targetnode.addReference(0, newnode)
+		newnode.ptrnode = newnode
+		targetnode.ptrnode = targetnode
+		mymap[xi] = newnode
+		mymap[yi] = targetnode
+		//fmt.Fprintf(os.Stderr, "input: %d %d\n", xi, yi)
 	}
-	
-	//for i:= 0; i < len(liste) - 1; i++ {
-		//currentnode := liste[i]
-		result := firstnode.recurse(0)
-		fmt.Fprintf(os.Stderr, "current: %d \n", result)
-		//if result > 0 { currentnode.value = result }
-	//}
-	
-	//fmt.Fprintf(os.Stderr, "liste:%d \n", liste)
-	
-	// fmt.Fprintln(os.Stderr, "Debug messages...")
-	// The minimal amount of steps required to completely propagate the advertisement
-	fmt.Println("1")
+
+	resultmin := 3000
+	for i:= 0; i < len(mymap);i++{
+		element := mymap[i]
+		max := element.recurse(0, element)
+		//fmt.Fprintf(os.Stderr, "RESULTS: %d\n", max)
+		if max < resultmin { resultmin = max }
+	}
+
+	fmt.Println(resultmin)
 }
