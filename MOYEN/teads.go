@@ -9,7 +9,6 @@ import "fmt"
  **/
  
 type node struct {
-	current int
 	ptrnode *node
 	references []reference
 }
@@ -17,10 +16,6 @@ type node struct {
 type reference struct {
 	value int
 	ptrnode *node
-}
-
-func (node *node) setCurrent (value int) {
-	node.current = value    
 }
 
 func (node *node) addReference (value int, ptrnode *node) {
@@ -32,7 +27,6 @@ func (node *node) recurse (counter int, source *node) int {
 	max := 0
 	if len(node.references) == 1 && counter > 1 { return counter }
 	counter++
-	//fmt.Fprintf(os.Stderr, "NODE: %d\n", node.current)
 	for _,reference := range node.references {
 			if source != reference.ptrnode {
 				var result int
@@ -75,8 +69,6 @@ func main() {
 			targetnode = &tmpnode2
 		}
 		
-		newnode.setCurrent(xi)
-		targetnode.setCurrent(yi)
 		newnode.addReference(0, targetnode)
 		targetnode.addReference(0, newnode)
 		newnode.ptrnode = newnode
@@ -90,7 +82,6 @@ func main() {
 	for i:= 0; i < len(mymap);i++{
 		element := mymap[i]
 		max := element.recurse(0, element)
-		//fmt.Fprintf(os.Stderr, "RESULTS: %d\n", max)
 		if max < resultmin { resultmin = max }
 	}
 
