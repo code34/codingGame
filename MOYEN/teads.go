@@ -1,89 +1,94 @@
 package main
 
 import "fmt"
-//import "os"
+import "os"
 
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
  **/
- 
+
 type node struct {
-	ptrnode *node
-	references []reference
-}
-
-type reference struct {
-	value int
-	ptrnode *node
-}
-
-func (node *node) addReference (value int, ptrnode *node) {
-	newref:= reference{value, ptrnode}
-	node.references = append(node.references, newref)
-}
-
-func (node *node) recurse (counter int, source *node) int {
-	max := 0
-	if len(node.references) == 1 && counter > 1 { return counter }
-	counter++
-	for _,reference := range node.references {
-			if source != reference.ptrnode {
-				var result int
-				tmpsource := node
-				if reference.value == 0 {
-					result = reference.ptrnode.recurse(counter, tmpsource)
-					reference.value = result
-				} else {
-					result = reference.value
-				}
-				if result > max { max = result }
-			}
-	}
-	//fmt.Fprintf(os.Stderr, "RESULTS: %d\n", max)
-	return max
+		pere []*node
+		fils []*node
+		value int
 }
 
 func main() {
 	// n: the number of adjacency relations
 	var n int
-	mymap := make(map[int]*node)
-	
 	fmt.Scan(&n)
-	
+
+	mymap := make(map[int]*node)
+
 	for i := 0; i < n; i++ {
-		// xi: the ID of a person which is adjacent to yi
-		// yi: the ID of a person which is adjacent to xi
-		var xi, yi int
-		fmt.Scan(&xi, &yi)
-		
-		newnode,_ := mymap[xi]
-		if newnode == nil {
-			tmpnode := node{}
-			newnode = &tmpnode
+	// xi: the ID of a person which is adjacent to yi
+	// yi: the ID of a person which is adjacent to xi
+	var xi, yi int
+	fmt.Scan(&xi, &yi)
+
+		pere,_ := mymap[xi]
+		if pere == nil {
+			pere = &node{}
+			pere.value = xi
+			mymap[xi] = pere
 		}
 		
-		targetnode,_ := mymap[yi]
-		if targetnode == nil {
-			tmpnode2 := node{}
-			targetnode = &tmpnode2
+		fils,_ := mymap[yi]
+		if fils == nil {
+			fils = &node{}
+			fils.value = yi
+			mymap[yi] = fils
 		}
-		
-		newnode.addReference(0, targetnode)
-		targetnode.addReference(0, newnode)
-		newnode.ptrnode = newnode
-		targetnode.ptrnode = targetnode
-		mymap[xi] = newnode
-		mymap[yi] = targetnode
-		//fmt.Fprintf(os.Stderr, "input: %d %d\n", xi, yi)
+		pere.fils = append(pere.fils, fils)
+		fils.pere = append(fils.pere, pere)
 	}
 
-	resultmin := 3000
-	for i:= 0; i < len(mymap);i++{
-		element := mymap[i]
-		max := element.recurse(0, element)
-		if max < resultmin { resultmin = max }
-	}
+	var counter int
+	mustcontinue := true
+	for mustcontinue {
+		var todelete []int
+		counter++
+		for i, _ := range mymap {
+			element := mymap[i]
+			flagme := false
+			if len(element.pere) == 1 && len(element.fils) == 0 {
+				flagme = true
+			}
+			if len(element.pere) == 0 && len(element.fils) == 1 {
+				flagme = true
+			}
+			if flagme {
+				todelete = append(todelete, i)
+			}
+		}
 
-	fmt.Println(resultmin)
+		for _, value := range todelete {
+			element  := mymap[value]
+
+			// s'il y a un pere et qu'il n'y a pas de fils
+			if len(element.pere) == 1 && len(element.fils) == 0 {
+				delete(mymap, value)
+				for key, myfils := range element.pere[0].fils {
+					if myfils == element {
+						element.pere[0].fils = append (element.pere[0].fils[:key], element.pere[0].fils[key+1:]...)
+					}
+				}
+			} 
+
+			// s'il y a un fils et qu'il n'y a pas de pere
+			if len(element.fils) == 1 && len(element.pere) == 0 {
+				delete(mymap, value)
+				//element.fils[0].pere = nil
+				for key, myfils := range element.fils[0].pere {
+					if myfils == element {
+						element.fils[0].pere = append (element.fils[0].pere[:key], element.fils[0].pere[key+1:]...)
+					}
+				}
+			}
+		}
+		if len(mymap) < 2 {mustcontinue = false}
+		fmt.Fprintf(os.Stderr, "MYMAP: %d\n", len(mymap))
+	}
+	fmt.Println(counter)
 }
