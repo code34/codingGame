@@ -16,7 +16,8 @@ func main() {
 	
 	var habitations []int
 	var xmin, xmax int
-	xmin = 3000
+	xmin = 99999
+	xmax = -99999
 	var median int
 	var meters int
 	var result int
