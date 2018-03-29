@@ -1,11 +1,11 @@
 package main
 
 import "fmt"
-//import "os"
 
 type numero struct {
 	value int
 	fils []*numero
+	exist bool
 }
 
 func (mynumero *numero) addChild (chiffre int, compteur *int) *numero {
@@ -24,25 +24,28 @@ func (mynumero *numero) addChild (chiffre int, compteur *int) *numero {
 func main() {
 	var N int
 	fmt.Scan(&N)
-	var compteur int
+	compteur := 0
 	var liste [10]numero
 	
 	for i := 0; i < N; i++ {
 		var telephone string
 		fmt.Scan(&telephone)
 		var current *numero
-		
 		for key, value := range telephone {
-			num := fmt.Sprintf("%d \n", int(value) - 48)
+			num := int(value) - 48
 			if key == 0 {
 				current = &liste[num]
+				if !current.exist {
+					current.value = num
+					current.exist = true
+					compteur++
+				}
 			} else {
 				current = current.addChild(num, &compteur)
 			}
-			//num := fmt.Sprintf(os.Stderr, "%d \n", int(value) - 48)
 		}
 	}
 	
 	// The number of elements (referencing a number) stored in the structure.
-	fmt.Println("number")
+	fmt.Println(compteur)
 }
