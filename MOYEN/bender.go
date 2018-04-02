@@ -11,6 +11,7 @@ type bender struct {
 	ypos int
 	casseur bool
 	inverse bool
+	indexdir int
 }
 
 type teleport struct {
@@ -18,8 +19,21 @@ type teleport struct {
 	ypos int
 }
 
-func (mybender *bender) checkobstacle (town [][]string) {
+func (bender *bender) changedir () string {
+	bender.indexdir++
+	var dir []string
+	if bender.inverse {
+		//OUEST, NORD, EST, SUD
+		dir = []string{"WEST", "NORTH", "EAST", "SOUTH", "LOOP"}
+	} else {
+		//SUD, EST, NORD et OUEST
+		dir = []string{"EAST", "NORTH", "WEST", "LOOP"}
+	}
+	return dir[bender.indexdir]
+}
 
+func checkobstacle (town [][]string, x int, y int) bool {
+	if town[y][x] == "X" || town[y][x] == "#" { return true } else { return false }
 }
 
 func main() {
@@ -56,6 +70,7 @@ func main() {
 		town = append(town, line)
 	}
 
+	mybender.indexdir = -1
 	tocontinue := true
 	for tocontinue {
 		var move string
@@ -75,10 +90,35 @@ func main() {
 			case " ": move = direction
 		}
 
-		if move == "SOUTH" { mybender.ypos++}
-		if move == "NORTH" { mybender.ypos--}
-		if move == "EAST" {mybender.xpos++}
-		if move == "WEST" {mybender.xpos--}
+		if move == "SOUTH" { 
+			if checkobstacle(town, mybender.xpos, mybender.ypos + 1) {
+				move = mybender.changedir()
+				fmt.Fprintf(os.Stderr, "move: %d \n", move)
+			} else {
+				mybender.ypos++
+			}
+		}
+		if move == "NORTH" { 
+			if checkobstacle(town, mybender.xpos, mybender.ypos - 1) {
+				move = mybender.changedir()
+			} else {
+				mybender.ypos--
+			}
+		}
+		if move == "EAST" {
+			if checkobstacle(town, mybender.xpos + 1, mybender.ypos) {
+				move = mybender.changedir()
+			} else {
+				mybender.xpos++
+			}
+		}
+		if move == "WEST" {
+			if checkobstacle(town, mybender.xpos - 1, mybender.ypos) {
+				move = mybender.changedir()
+			} else {
+				mybender.xpos--
+			}
+		}
 		if move == "TELEPORT" {
 			for _, newpos := range teleports {
 				if newpos.xpos != mybender.xpos && newpos.ypos != mybender.ypos {
@@ -88,23 +128,18 @@ func main() {
 				}
 			}
 		}
-		if move == "OBSTACLE" {
-			mybender.checkobstacle(town)
-		}
 		if move == "INVERSE" {
 			mybender.inverse = !mybender.inverse
 		}
 		if move == "END" {
+			move = ""
 			tocontinue = false
 		} else {
 			solution = append(solution, move)
 			direction = move
 		}
 		fmt.Fprintf(os.Stderr, "solution: %s %d %d \n", solution, mybender.xpos, mybender.ypos)
+		fmt.Println(move)
 	}
-
-
-	fmt.Fprintf(os.Stderr, "position: %s %s %d %d \n", mybender.xpos, mybender.ypos)
-	fmt.Fprintf(os.Stderr, "teleport: %d \n", teleports)
-	fmt.Println(solution)// Write answer to stdout
+	//fmt.Println(solution)// Write answer to stdout
 }
