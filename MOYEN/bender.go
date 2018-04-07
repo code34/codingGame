@@ -11,7 +11,6 @@ type bender struct {
 	ypos int
 	casseur bool
 	inverse bool
-	indexdir int
 }
 
 type teleport struct {
@@ -19,21 +18,54 @@ type teleport struct {
 	ypos int
 }
 
-func (bender *bender) changedir () string {
-	bender.indexdir++
-	var dir []string
-	if bender.inverse {
-		//OUEST, NORD, EST, SUD
-		dir = []string{"WEST", "NORTH", "EAST", "SOUTH", "LOOP"}
-	} else {
-		//SUD, EST, NORD et OUEST
-		dir = []string{"EAST", "NORTH", "WEST", "LOOP"}
+func (mybender *bender) convertmove (move string) (int,int) {
+	xpos := 0
+	ypos := 0
+	switch move {
+		case "SOUTH" : 
+			xpos = mybender.xpos
+			ypos = mybender.ypos + 1
+		case "NORTH":
+			xpos = mybender.xpos
+			ypos = mybender.ypos - 1
+		case "WEST":
+			xpos = mybender.xpos - 1
+			ypos = mybender.ypos
+		case "EAST":
+			xpos = mybender.xpos + 1
+			ypos = mybender.ypos
 	}
-	return dir[bender.indexdir]
+	return xpos, ypos
 }
 
-func checkobstacle (town [][]string, x int, y int) bool {
-	if town[y][x] == "X" || town[y][x] == "#" { return true } else { return false }
+func (mybender *bender) changedir (town [][]string, move string) string {
+	var dir []string
+	if mybender.inverse {
+		dir = []string{"WEST","NORTH", "EAST", "SOUTH"}
+	} else {
+		dir = []string{"SOUTH","EAST", "NORTH", "WEST"}
+	}
+	dir2 := []string{move}
+	dir = append(dir2, dir...)
+
+	for _, value := range dir {
+		xpos, ypos := mybender.convertmove(value)
+		if !mybender.checkobstacle(town, xpos, ypos) {
+			mybender.xpos = xpos
+			mybender.ypos = ypos
+			return value
+		}
+	}
+	return "LOOP"
+}
+
+func (mybender *bender) checkobstacle (town [][]string, x int, y int) bool {
+	if !mybender.casseur {
+		if town[y][x] == "X" || town[y][x] == "#" { return true }
+	} else {
+		if town[y][x] == "#" { return true }
+	}
+	return false;
 }
 
 func main() {
@@ -47,12 +79,12 @@ func main() {
 	var teleports []teleport
 	var mybender bender
 	var solution []string
-	var direction string
+	direction := "SOUTH"
 
 	for i := 0; i < L; i++ {
 		var line []string
 		scanner.Scan()
-		fmt.Fprintf(os.Stderr, "%s \n", scanner.Text())
+		//fmt.Fprintf(os.Stderr, "%s \n", scanner.Text())
 		for key, value := range scanner.Text() {
 			char := fmt.Sprintf("%c", value)
 			if char == "@" {
@@ -67,78 +99,50 @@ func main() {
 			}
 			line = append (line, char)
 		}
+		fmt.Fprintf(os.Stderr, "%s %d \n", line, i)
 		town = append(town, line)
 	}
 
-	mybender.indexdir = -1
 	tocontinue := true
 	for tocontinue {
 		var move string
-		pos := town[mybender.xpos][mybender.ypos]
+		pos := town[mybender.ypos][mybender.xpos]
 		switch pos {
 			case "@" : move = "SOUTH"
 			case "$" : move = "END"
-			case "#" : move = "OBSTACLE"
-			case "X" : move = "OBSTACLE"
 			case "S" : move = "SOUTH"
 			case "E" : move = "EAST"
 			case "W" : move = "WEST"
 			case "N" : move = "NORTH"
-			case "I" : move = "INVERSE"
-			case "B": move = "CASSEUR"
-			case "T": move = "TELEPORT"
+			case "I" : 
+				move = direction
+				mybender.inverse = !mybender.inverse
+			case "X": move = direction
+			case "B": 
+				move = direction
+				mybender.casseur = !mybender.casseur
+			case "T": 
+				for _, newpos := range teleports {
+					if newpos.xpos != mybender.xpos || newpos.ypos != mybender.ypos {
+						mybender.xpos = newpos.xpos
+						mybender.ypos = newpos.ypos
+						fmt.Fprintf(os.Stderr, "BEURRRRRLLL %d %d \n", newpos.xpos, newpos.ypos)
+						break
+					}
+				}
+				move = direction
 			case " ": move = direction
 		}
 
-		if move == "SOUTH" { 
-			if checkobstacle(town, mybender.xpos, mybender.ypos + 1) {
-				move = mybender.changedir()
-				fmt.Fprintf(os.Stderr, "move: %d \n", move)
-			} else {
-				mybender.ypos++
-			}
-		}
-		if move == "NORTH" { 
-			if checkobstacle(town, mybender.xpos, mybender.ypos - 1) {
-				move = mybender.changedir()
-			} else {
-				mybender.ypos--
-			}
-		}
-		if move == "EAST" {
-			if checkobstacle(town, mybender.xpos + 1, mybender.ypos) {
-				move = mybender.changedir()
-			} else {
-				mybender.xpos++
-			}
-		}
-		if move == "WEST" {
-			if checkobstacle(town, mybender.xpos - 1, mybender.ypos) {
-				move = mybender.changedir()
-			} else {
-				mybender.xpos--
-			}
-		}
-		if move == "TELEPORT" {
-			for _, newpos := range teleports {
-				if newpos.xpos != mybender.xpos && newpos.ypos != mybender.ypos {
-					mybender.xpos = newpos.xpos
-					mybender.ypos = newpos.ypos
-					break
-				}
-			}
-		}
-		if move == "INVERSE" {
-			mybender.inverse = !mybender.inverse
-		}
-		if move == "END" {
-			move = ""
-			tocontinue = false
-		} else {
+		if move != "END" {
+			move = mybender.changedir(town, move)
 			solution = append(solution, move)
 			direction = move
+		} else {
+			move = ""
+			tocontinue = false
 		}
-		fmt.Fprintf(os.Stderr, "solution: %s %d %d \n", solution, mybender.xpos, mybender.ypos)
+		fmt.Fprintf(os.Stderr, "solution: %s %d %d %s\n", solution, mybender.xpos, mybender.ypos, town[mybender.ypos][mybender.xpos])
 		fmt.Println(move)
 	}
 	//fmt.Println(solution)// Write answer to stdout
