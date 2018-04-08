@@ -117,7 +117,9 @@ func main() {
 			case "I" : 
 				move = direction
 				mybender.inverse = !mybender.inverse
-			case "X": move = direction
+			case "X": 
+				town[mybender.ypos][mybender.xpos] = " "
+				move = direction
 			case "B": 
 				move = direction
 				mybender.casseur = !mybender.casseur
@@ -131,7 +133,8 @@ func main() {
 					}
 				}
 				move = direction
-			case " ": move = direction
+			case " ": 
+				move = direction
 		}
 
 		if move != "END" {
