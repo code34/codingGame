@@ -56,7 +56,7 @@ func (mybender *bender) changedir (town [][]string, move string) string {
 			return value
 		}
 	}
-	return "LOOP"
+	return ""
 }
 
 func (mybender *bender) checkobstacle (town [][]string, x int, y int) bool {
@@ -79,10 +79,10 @@ func main() {
 	var teleports []teleport
 	var mybender bender
 	var solution []string
-	direction := "SOUTH"
+	lastmove := "SOUTH"
 
 	for i := 0; i < L; i++ {
-		var line []string
+		var street []string
 		scanner.Scan()
 		//fmt.Fprintf(os.Stderr, "%s \n", scanner.Text())
 		for key, value := range scanner.Text() {
@@ -97,10 +97,10 @@ func main() {
 				myteleport.ypos = i
 				teleports = append(teleports, myteleport)
 			}
-			line = append (line, char)
+			street = append (street, char)
 		}
-		fmt.Fprintf(os.Stderr, "%s %d \n", line, i)
-		town = append(town, line)
+		//fmt.Fprintf(os.Stderr, "%s %d \n", street, i)
+		town = append(town, street)
 	}
 
 	tocontinue := true
@@ -115,38 +115,45 @@ func main() {
 			case "W" : move = "WEST"
 			case "N" : move = "NORTH"
 			case "I" : 
-				move = direction
+				move = lastmove
 				mybender.inverse = !mybender.inverse
 			case "X": 
 				town[mybender.ypos][mybender.xpos] = " "
-				move = direction
+				move = lastmove
 			case "B": 
-				move = direction
+				move = lastmove
 				mybender.casseur = !mybender.casseur
 			case "T": 
 				for _, newpos := range teleports {
 					if newpos.xpos != mybender.xpos || newpos.ypos != mybender.ypos {
 						mybender.xpos = newpos.xpos
 						mybender.ypos = newpos.ypos
-						fmt.Fprintf(os.Stderr, "BEURRRRRLLL %d %d \n", newpos.xpos, newpos.ypos)
 						break
 					}
 				}
-				move = direction
+				move = lastmove
 			case " ": 
-				move = direction
+				move = lastmove
 		}
 
-		if move != "END" {
+		if len(solution) > L * C {
+			tocontinue = false
+		} else if move != "END" {
 			move = mybender.changedir(town, move)
-			solution = append(solution, move)
-			direction = move
+			lastmove = move
 		} else {
 			move = ""
 			tocontinue = false
 		}
-		fmt.Fprintf(os.Stderr, "solution: %s %d %d %s\n", solution, mybender.xpos, mybender.ypos, town[mybender.ypos][mybender.xpos])
-		fmt.Println(move)
+		//fmt.Fprintf(os.Stderr, "solution: %s %d %d %s\n", solution, mybender.xpos, mybender.ypos, town[mybender.ypos][mybender.xpos])
+		solution = append(solution, move)
 	}
-	//fmt.Println(solution)// Write answer to stdout
+	
+	if len(solution) > L * C {
+		fmt.Println("LOOP")
+	} else {
+		for _, themove := range solution {
+			fmt.Println(themove)
+		}
+	}
 }
