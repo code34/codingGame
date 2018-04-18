@@ -10,44 +10,32 @@ func main() {
 	
 	var price int
 	fmt.Scan(&price)
-	mymap := make(map[int]int)
 	var budgets []int
 	var solution []int
 
 	for i := 0; i < N; i++ {
 		var budget int
 		fmt.Scan(&budget)
-		_, ok := mymap[budget]
-		if !ok {
-			mymap[budget] = 1
-			budgets = append(budgets, budget)
-		} else {
-			mymap[budget]++
-		}
+		budgets = append(budgets, budget)
 		fmt.Fprintf(os.Stderr, "budget: %d price: %d \n", budget, price)
 	}
 	sort.Ints(budgets)
 
+	var index, max int
 	for _, budget := range budgets {
-		value := mymap[budget]
-		if value == 1 {
-			price -= budget
-			solution = append(solution, budget)
+		max = price / (len(budgets) - index)
+		if budget > max { 
+			solution = append(solution, max)
+			price = price - max
 		} else {
-			if value * budget > price {
-				budget = (price / value)
-			}
-			for i := 0; i < value; i++ {
-				price = price - budget
-				if price == 1 && i + 1 == value { budget += 1}
-				solution = append(solution, budget)
-			}
+			solution = append(solution, budget)
+			price = price - budget
 		}
-		//fmt.Fprintf(os.Stderr, "price: %d \n", solution)
+		index++
 	}
 
 	//fmt.Fprintf(os.Stderr, "price: %d map:%d budgets:%d \n", price, mymap, budgets)
-	if price > 1 {
+	if price > 0 {
 		fmt.Println("IMPOSSIBLE")
 	} else {
 		for _, value := range solution {
