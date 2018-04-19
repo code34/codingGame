@@ -1,3 +1,14 @@
+/*Bender est un robot dépressif qui se soigne par la fête et l’alcool. Pour lui épargner 
+une vie de débauche, ses créateurs ont reprogrammé son système de contrôle avec 
+une intelligence plus rudimentaire. Malheureusement, il en a perdu tout son humour
+et se retrouve rejeté par ses anciens amis. Bender est maintenant livré à lui-même et
+ erre dans les rues de Futurama avec l'intention d’en finir dans une cabine à suicide.
+
+Pour l'intercepter et le sauver d'une mort quasi-certaine, les autorités vous chargent 
+d'une mission : écrire un programme qui permettra de prévoir le chemin parcouru par
+Bender. Pour cela, on vous fournit la logique de la nouvelle intelligence avec laquelle
+il a été programmé ainsi qu'une carte de la ville.*/
+
 package main
 
 import "fmt"

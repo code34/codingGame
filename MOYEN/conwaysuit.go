@@ -1,3 +1,5 @@
+/*Votre mission est d'afficher une ligne de la suite de Conway.*/
+
 package main
 
 import "fmt"

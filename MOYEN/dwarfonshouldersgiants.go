@@ -1,3 +1,14 @@
+/*La citation "Des nains sur des épaules de géants" se réfère à l'importance
+pour tout homme de s'appuyer sur les travaux de ses prédécesseurs.
+ 
+À la lecture des textes, on ne glane qu'une petite partie de cette dépendance:
+telle personne a influencé telle autre personne. On apprendra par la suite 
+que cette seconde personne en a, à son tour, influencé une troisième,et
+ainsi de suite. C'est cette chaîne d'influence qui nous intéresse dans cet
+exercice, et plus précisément, il s'agit de trouver la longueur de la plus 
+grande de ces chaînes.*/
+
+
 package main
 
 import "fmt"

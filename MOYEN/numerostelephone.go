@@ -1,3 +1,19 @@
+/*En rejoignant l’équipe de développement du smartphone iDroid, on
+vous a confié la responsabilité de développer le gestionnaire de contacts.
+Évidement, ce qu’on a oublié de vous préciser c’est que sur l’iDroid les
+contraintes techniques sont fortes : le système dispose de peu de
+mémoire et le processeur est aussi véloce qu’un Cyrix des années 90...
+
+Dans le cahier des charges, deux points retiennent votre attention :
+
+1. Assistance intelligente à la saisie des numéros
+Le ou les numéros correspondant aux premiers chiffres 
+saisis devront être affichés à l’utilisateur, quasi instantanément.
+
+2. Optimisation du stockage des numéros
+Les premiers chiffres communs aux numéros ne devront pas être
+dupliqués en mémoire.*/
+
 package main
 
 import "fmt"

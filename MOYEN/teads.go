@@ -1,12 +1,20 @@
+/*Chez Teads nous savons que pour maximiser l’impact d’une publicité,
+il faut que le message qu’elle porte se propage largement et rapidement.
+ 
+Le potentiel de viralité est une donnée dont vous disposez, il est représenté
+par un réseau de personnes qui diffuseront un message auprès d’autres personnes.
+On supposera qu’il n’y a jamais de relation cyclique dans ce réseau.
+Par exemple, si une personne #1 est en relation avec une personne #2 et que #2
+est en relation avec #3, alors il est impossible que #3 soit en relation directe avec #1.
+ 
+Lorsqu’un individu diffuse un message il n’y a qu’une étape dont la durée est
+indépendante du nombre de personnes avec qui il ou elle est en lien direct.
+Nous considérerons que cette étape prend toujours 1 heure. */
+
 package main
 
 import "fmt"
 import "os"
-
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 
 type node struct {
 		pere []*node

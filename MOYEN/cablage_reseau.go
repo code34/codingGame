@@ -1,3 +1,8 @@
+/*Un opérateur Internet projette de raccorder un parc d'entreprises à la fibre optique.
+La zone à couvrir est large et il vous demande d'écrire un programme qui permettra
+de calculer la longueur minimale de câble de fibre optique nécessaire pour relier
+l'ensemble des bâtiments.*/
+
 package main
 
 import "fmt"
