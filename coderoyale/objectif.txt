@@ -1,0 +1,196 @@
+
+
+Résumé des nouvelles règles
+Les Reines débutent la partie avec moins de points de vie. C'est le dernier changement de règles. Voir les détails ci-dessous.
+  Objectif
+Construire des bâtiments et créer des armées pour détruire la Reine de votre adversaire.
+  Règles
+
+La carte
+
+Deux joueurs s'affrontent sur une carte rectangulaire de 1920 x 1000 unités, parsemée de sites de construction circulaires. Les coordonnées 0,0 correspondent au pixel situé en haut à gauche.
+
+La Reine
+
+Chaque joueur contrôle une Reine qui peut construire différents types de bâtiments sur des sites de construction. La Reine est le seul moyen pour un joueur d'interagir avec la carte.
+
+La Reine est représentée par un cercle de rayon de 30 unités. Elle se déplace à l'aide de la commande MOVE de 60 unités au plus par tour.
+
+Les deux Reines démarrent la partie avec la même quantité de points de vie (PV) aléatoire (entre 25 et 100). A 0 PV, la Reine est détruite et le joueur correspondant perd la partie. Si les deux Reines sont détruites pendant le même tour de jeu, il y a match nul.
+
+Bâtiments
+
+Les bâtiments ne coûtent rien à construire. La Reine peut construire un bâtiment sur un site de construction (à l'aide de la commande BUILD), si elle est en contact avec ce site. La variable touchedSite indique l'identifiant du site avec lequel la Reine est en contact (-1 sinon).
+
+Il y a trois types de bâtiments:
+
+    BARRACKS-{type}: les casernes servent à entraîner des armées de différents types ({type} peut valoir KNIGHT, ARCHER, ou GIANT). Une caserne peut commencer à entraîner des armées un tour seulement après sa construction. Si la Reine rentre en contact avec une caserne ennemie, cette dernière est détruite.
+    TOWER: les tours sont des structures de défense statique avec un certain rayon de tir. A chaque tour de jeu, une tour cible l'armée ennemie la plus proche à portée et lui inflige 3 dégâts de base à la limite de la portée de la tour. Plus l'armée est proche de la tour, plus les dégâts infligés sont importants (+1 toutes les 200 unités). S'il n'y a pas d'armée ennemie à portée et que la Reine est à portée, une tour ciblera la Reine à la place et lui inflige 1 dégâts de base (+1 toutes les 200 unités). Les tours se détériorent à chaque tour jusqu'à être complètement détruites. La Reine peut améliorer une tour et augmenter son rayon d'action en utilisant la même commande que pour la construire: BUILD {id} TOWER.
+    MINE: les mines permettent de produire de l'or. Chaque joueur commence la partie avec 100 d'or. Une fois qu'une mine est construite, elle produit automatiquement 1 d'or par tour. Le taux de production d'une mine peut être augmenté de 1 en utilisant la même commande que pour la construire: BUILD {id} MINE. Cependant, chaque mine a un taux maximum de production (compris entre +1 et +5). Chaque site de construction a une quantité limitée d'or disponible. La mine s'épuise donc jusqu'à être détruite. Si la Reine ou une armée rentre en contact avec une mine ennemie, cette dernière est détruite. Le taux maximum de production ainsi que la quantité d'or totale d'un site de production ne sont disponibles que si la Reine se trouve à moins de 300 unités du site. 
+
+La Reine peut remplacer un bâtiment allié en construisant un autre bâtiment par dessus (sauf si c'est une caserne qui entraîne des armées à ce moment).
+
+Les armées
+
+Pour combattre la Reine de l'adversaire, un joueur doit entraîner des armées dans une caserne. Une fois entraînées (ce qui prend plusieurs tours), les armées ont un comportement très simple et ne peuvent pas être contrôlées. Chaque armée a un temps de vie limité, perdant 1 PV par tour.
+
+Il y a trois types d'armées.
+
+    Les chevaliers (KNIGHT) sont des unités rapides qui se déplacent vers la Reine ennemie et l'attaquent au corps à corps. Il faut 80 d'or pour entraîner un groupe de 4 chevaliers à la caserne de chevaliers (BARRACKS-KNIGHT).
+    Les archers (ARCHER) sont des unités lentes qui se déplacent vers l'armée ennemie la plus proche et l'attaquent à courte portée. Il faut 100 d'or pour entraîner un groupe de 2 archers à la caserne d'archers (BARRACKS-ARCHER). Note: les archers n'attaquent pas la Reine ennemie ; ce sont des unités purement défensives.
+    Les géants (GIANT) n'attaquent pas les armées ni la Reine. Ils n'attaquent que les tours, les détruisant petit à petit. Il faut 140 d'or pour entraîner un seul géant à la caserne de géants (BARRACKS-GIANT). 
+
+La Reine est listée ici par souci de comparaison.
+Type	Chevalier	Archer	Géant	Reine
+Coût	80	100	140	N/A
+Nombre par groupe d'entraînement	4	2	1	N/A
+Vitesse	100	75	50	60
+Dégâts par tour	1 à la Reine	10 aux Géants
+2 aux autre armées 	80 aux tours	N/A
+Portée	0	200	0	N/A
+PV	30	45	200	200
+Temps d'entraînement (tours)	5	8	10	N/A
+Rayon	20	25	40	30
+
+L'entraînement des armées
+
+Un joueur peut entraîner des armées en utilisant la commande TRAIN et en indiquant les identifiants de casernes alliées dans lesquelles ce joueur souhaite créer des troupes. Une caserne qui entraîne des armées ne peut pas recommencer un cycle d'entraînement avant que les premières armées soient créées. Exemples:
+
+    TRAIN 13 6 19 Les 3 casernes alliées 13, 6 et 19 commencent à entraîner des armées.
+    TRAIN 14 La caserne alliée 14 commence à entraîner des armées. 
+
+Une fois que les commandes d'entraînement sont envoyées, le joueur paie le prix total en or, et chaque caserne commence à entraîner le nombre correspondant d'unités. Au dernier tour d'entraînement, les unités apparaissent autour de la caserne. Elles commencent à agir au tour suivant.
+
+L'entraînement des armées constitue une commande supplémentaire obligatoire chaque tour. Pour n'entraîner aucune armée, il suffit d'utiliser la commande TRAIN sans identifiant.
+Conditions de victoire
+
+    Détruire la Reine ennemie
+    Après 200 tours, votre Reine a plus de PV que la Reine ennemie.
+
+Conditions de défaite
+
+    Vous effectuez une action invalide ou votre programme ne répond pas dans les temps
+
+  Règles avancées
+
+Ordre des actions d'un tour de jeu
+
+    Etat du jeu envoyé aux joueurs
+    Entrées des joueurs reçues et traitées :
+        Début des nouveaux entraînements d'armée
+        Déplacement des Reines
+        Construction des nouveaux bâtiments
+    Déplacement des armées, résolution des collisions
+    Attaque des armées et destruction des mines par les armées
+    Destruction des mines et casernes par les Reines
+    Action des structures restantes (incluant celles construites ce tour-ci) :
+        Tir des tours ; les armées mortes sont retirées du jeu
+        Le cycle d'entraînement des casernes progresse ; création des nouvelles unités
+        Production d'or par les mines
+    Vieillissement des armées ; les armées mortes sont retirées du jeu
+    Vérification des conditions de victoire et de défaite
+
+
+Collisions
+
+Les unités du jeu ne peuvent pas partager un espace en commun. Tous les bâtiments, Reines et armées sont modélisés par des cercles.
+
+Les mouvements d'unités sont simplement effectués en déplaçant chaque unités vers sa destinations. Cependant, à la fin de chaque tour, tant qu'il existe des collisions, les unités incriminées sont déplacées dans des directions opposées. (sauf pour les sites de constructions qui sont immobiles) Il est donc possible pour une Reine d'être poussée par une vague d'armées.
+
+Chaque unité a un poids:
+
+    Site de construction: infini (immobile)
+    Reine: 100
+    Géant: 20
+    Archer: 9
+    Chevalier: 4
+
+Une unité avec moins de poids qu'une l'unité avec laquelle elle rentre en collision sera plus déplacée que cette dernière.
+
+Contact entre les unités
+
+Pour savoir si deux unités sont considérées en contact, on compare la distance entre leur deux centres : estEnContact = distance - rayon1 - rayon2 < 5 . Cela s'applique pour les cas suivants :
+
+    Chevalier - Reine (dégats)
+    Reine - Site (construction et destruction)
+    Armée - Mine (destruction)
+    Géant - Tour (dégâts)
+
+
+Contact entre les unités
+
+Si les deux Reines essayent de constuire un bâtiment sur le même site de construction au même moment, un seul bâtiment sera construit:
+
+    Pendant les tours pairs (incluant le tour 0), le joueur 2 peut constuire.
+    Pendant les tours impairs, le joueur 1 peut construire. 
+
+Site de construction
+
+Tous les sites de construction sont créés aléatoirement par paires: les attributs d'un site sont les mêmes que son site-mirroir. La quantité d'or d'un site est une valeur aléatoire entre 200 et 250, son taux maximum de production est compris entre +1 et +3, et son rayon entre 60 et 110 unités.
+
+Les sites qui sont situés au centre de la carte (dans un rayon de 500 unités autour du centre de la carte) ont un bonus de 50 d'or supplémentaire ainsi qu'un bonus de +1 au taux de production maximal. Les sites situés encore plus proches du centre de la carte (dans un rayon de 200 unités autour du centre de la carte) ont un bonus additionel de 50 d'or supplémentaire ainsi qu'un bonus additionel de +1 au taux de production maximal.
+
+PV d'une tour
+
+La quantité de PV (param1) d'une tour détermine sa portée d'attaque (param2). Chaque PV permet à la tour de couvrir 1000 unités carrées (cela ne représente pas grand chose !), excluant l'espace correspondant au site de construction sur lequelle la tour est construite.
+
+Le rayon d'attaque est calculé chaque tour grâce à la formule suivante : rayonAttaque = sqrt((pv * 1000 + aireSite) / PI) -- (mesuré depuis le centre du site) De sorte que PI * rayonAttaque^2 = pv * 1000 + aireSite. Une tour qui vient d'être construite commence avec 200 PV. Les sites qui ont un rayon plus faible auront donc une portée d'attaque plus élevée.
+
+Quand une tour est réparée/améliorée, elle reçoit 100 PV supplémentaires. La quantité de PV maximum d'une tour est de 800. Chaque tour perd 4 PV par tour. Chaque géant qui finit son tour en contact avec une tour inflige 80 dégâts à la tour. Ainsi, la Reine peut réparer une tour plus vite qu'un géant la détruit.
+
+Match nul
+
+La partie finit en match nul si après 200 tours, les deux Reines ont la même quantité de PV ou qu'elles sont détruites au même tour.
+  Entrées du jeu
+Entrées d'initialisation
+Ligne 1: un entier numSites, indiquant le nombre de sites de construction présents sur la carte.
+Ligne 2: Un entier touchedSite représentant l'identifiant du site de construction en contact avec la Reine s'il existe, -1 sinon.
+Les numSites lignes suivantes : 4 entiers représentant l'identifiant obstacleId, les coordonnées x et y, et le rayon radius
+d'un site de construction.
+Entrées pour un tour de jeu
+Ligne 1: Un entier gold représentant l'or disponible du joueur.
+Les numSites lignes suivantes : 7 entiers siteId ignore1 ignore2 structureType owner param1 param2
+
+    siteId: L'identifiant d'un site de construction
+    gold: La quantité d'or restante à miner du site de construction (-1 si inconnue)
+    maxMineSize: le taux de production maximum d'une mine sur ce site de construction (-1 si inconnu)
+    structureType: Le type de bâtiment construit sur le site.
+        -1: Pas de bâtiment construit
+        0: Une mine
+        1: Une tour
+        2: Une caserne
+    owner: Le propriétaire du bâtiment
+        -1: Pas de bâtiment construit
+        0: Bâtiment allié
+        1: Bâtiment ennemi
+    param1:
+        Quand il n'y a pas de bâtiment construit : -1
+        Si c'est une mine, son taux de production (entre 1 et 5), -1 si c'est une mine ennemie.
+        Si c'est une tour, son nombre de points de vie restants.
+        Si c'est une caserne, le nombre de tours restant avant que la caserne puisse à nouveau lancer un cycle d'entraînement d'armées, 0 si elle est disponible.
+    param2
+        Quand il n'y a pas de bâtiment construit ou si c'est une mine: -1
+        Si c'est une tour, son rayon de portée
+        Si c'est une caserne, le type d'armée qu'elle produit 0 pour une caserne de chevaliers, 1 pour une caserne d'archers, 2 pour une caserne de géants. 
+
+Ligne suivante : numUnits le nombre total d'unités actives, incluant les Reines
+Les numUnits lignes suivantes : 5 entiers x, y, owner, unitType, et health
+
+    x et y: les coordonnées de l'unité.
+    owner: 0 = alliée; 1 = ennemie.
+    unitType: le type d'unité -1 pour une Reine, 0 pour un chevalier, 1 pour un archer, et 2 pour un géant.
+    health : Le nombre de points de vie restants de l'unité
+
+Sortie pour un tour de jeu
+Première ligne : L'une des commandes suivantes
+
+    WAIT Ne rien faire
+    MOVE x y Déplacer la Reine vers les coordonnées indiquées (x et y étant des entiers)
+    BUILD {siteId} TOWER Construire une tour sur le site de construction indiqué. Si la Reine est trop éloignée du site de construction, cette commande déplacera la Reine vers le site.
+    BUILD {siteId} MINE Construire une mine sur le site de construction indiqué. Si la Reine est trop éloignée du site de construction, cette commande déplacera la Reine vers le site.
+    BUILD {siteId} BARRACKS-{type} Construire une caserne sur le site de construction indiqué. Si la Reine est trop éloignée du site de construction, cette commande déplacera la Reine vers le site. Le type de caserne est soit KNIGHT (chevalier) soit ARCHER (archer) soit GIANT (géant). 
+
+Seconde ligne : TRAIN suvi de zéro, un ou plusieurs identifiants siteId de casernes alliées pour commencer à entraîner des armées.
+Contraintes
+Temps de réponse pour le premier tour ≤ 1000ms
+Temps de réponse pour un tour ≤ 50ms

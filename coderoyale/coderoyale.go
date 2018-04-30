@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "os"
+import "math"
 
 type site struct{
 	siteId, x, y, radius, gold, maxMineSize, structureType, owner, param1,param2 int
@@ -36,22 +37,88 @@ func (myqueen *queen) moveTo(x int, y int) {
 	fmt.Fprintf(os.Stdout, "MOVE %d %d\n",x, y)
 }
 
-func findSafeZone(towers []site) (x,y int) {
-	num := 0
-	result := 0
-	for key, tower := range towers {
-		count := 0
-		for _, dest := range towers {
-			if tower.distance(dest.x, dest.y) < 60 {
-				count++
-			}
-		}
-		if count > num { 
-			num = count
-			result = key
+func improveTower(allsites map[int]site) (site) {
+	var target site
+	min := 2000
+	for _, barrack := range allsites {
+		if barrack.structureType == 1 && barrack.param1 < min {
+			target = barrack
+			min = barrack.param1
 		}
 	}
-	return towers[result].x, towers[result].y
+	return target
+}
+
+func findSafeZone(allsites map[int]site, initstartx int, initstarty int) (x,y int) {
+	min := 2000
+	var result site
+	for _, barrack := range allsites {
+		value := barrack.distance(initstartx, initstarty)
+		if value < min && barrack.structureType == 1 {
+			min = value
+			result = barrack
+		}
+	}
+	return result.x, result.y
+}
+
+func findLimitSiteTop (allsites map[int]site, initstartx int) (site) {
+	var min, max int 
+	max = 1000
+	var target site
+	for _, barrack := range allsites {
+		if initstartx < 900 && barrack.y > min && barrack.structureType == -1 && barrack.x < 900 {
+			target = barrack
+			min = barrack.y
+		} else if initstartx > 1100 && barrack.y < max && barrack.structureType == -1 && barrack.x > 1100{
+			target = barrack
+			max = barrack.y
+		}
+	}
+	return target
+}
+
+func findLimitSite (allsites map[int]site, initstartx int) (site) {
+	var xmax int
+	var target site
+	xmin := 1920
+	if initstartx > 900 {
+		target.x = 1920
+		target.y = 1000
+	}	
+	for _, barrack := range allsites {
+		if initstartx < 900 && barrack.x < 900 && barrack.x > xmax && barrack.structureType == -1 {
+			target = barrack
+			xmax = barrack.x
+		} else if initstartx > 1100 && barrack.x > 1100 && barrack.x < xmin && barrack.structureType == -1 {
+			target = barrack
+			xmin = barrack.x
+		}
+	}
+	return target
+}
+
+func (myqueen *queen) findNearestSite (allsites map[int]site, initstartx int) (site) {
+	var xmax int
+	var target site
+	xmin := 1920
+	min := 2000
+	if initstartx > 900 {
+		target.x = 1920
+		target.y = 1000
+	}
+	for _, barrack := range allsites {
+		if myqueen.distance(barrack.x, barrack.y) < min && barrack.owner == -1 {
+			if initstartx < 900 && barrack.x < 900 && barrack.x > xmax && barrack.structureType == -1 {
+				target = barrack
+				min = myqueen.distance(barrack.x, barrack.y)
+			} else if initstartx > 1100 && barrack.x > 1100 && barrack.x < xmin && barrack.structureType == -1 {
+				target = barrack
+				min = myqueen.distance(barrack.x, barrack.y)
+			}
+		}
+	}
+	return target
 }
 
 func main() {
@@ -108,7 +175,7 @@ func main() {
 			if initstartx == 0 && owner == 0 && unitType == -1 {
 				initstartx = x
 				initstarty = y
-				fmt.Fprintf(os.Stderr, "start x:%d y:%d\n", initstartx, initstarty)
+				fmt.Fprintf(os.Stderr, "%d %d\n", initstartx, initstarty)
 			}
 			if unitType == -1 {
 				var newqueen queen
@@ -147,6 +214,7 @@ func main() {
 		var listmine []site
 		var barcher,bknight,bgiant site
 		var enemytowercount int
+		var giantcount int
 
 		// on se deplace vers le prochain site vide -- done
 		// on se deplace pour eviter les enemis -- des qu'inférieur à 60m
@@ -154,11 +222,8 @@ func main() {
 		// ou pour se placer en bordure d écran
 		// ou pour upgrader un site existant
 
+		target = queens[0].findNearestSite(allsites, initstartx)
 		for _, barrack := range allsites {
-			if queens[0].distance(barrack.x, barrack.y) < min && barrack.owner == -1 {
-				target = barrack
-				min = queens[0].distance(barrack.x, barrack.y)
-			}
 			if barrack.owner == 1 && barrack.structureType == 1 {
 				enemytowercount++
 			}
@@ -182,19 +247,39 @@ func main() {
 			}
 		}
 
+		//target = findLimitSiteTop(allsites, initstartx)
+		/* if !haveknight {
+			target = findLimitSite(allsites, initstartx)
+		} else if !havearcher {
+			target = findLimitSite(allsites, initstartx)
+		} else if !havegiant {
+			target = findLimitSite(allsites, initstartx)
+		}*/
+
 		retreat = false
-		min = 400
+		min = 600
 		for _, theunit := range allunits {
 			if  theunit.owner == 1 && queens[0].distance(theunit.x, theunit.y) < min {
 				retreat = true
 			}
+			if  theunit.owner == 0 && theunit.unitType == 2 {
+				giantcount++
+			}
 		}
 		
+		var productivity int
+		for _, mine  := range listmine {
+			productivity = productivity + mine.param1
+		}
+
+		if queens[0].health < 40 && productivity > 1 && haveknight {
+			target = improveTower(allsites)
+		}
 
 		// fmt.Fprintln(os.Stderr, "Debug messages...")
 		// First line: A valid queen action
 		// Second line: A set of training instructions
-		fmt.Fprintf(os.Stderr,"RETREAT %b \n", retreat)
+		fmt.Fprintf(os.Stderr,"RETREAT %b PRODUCTIVITY: %d \n", retreat, productivity)
 		if touchedSite != -1 && allsites[touchedSite].owner == -1 {
 			if retreat {
 				fmt.Fprintf(os.Stdout,"BUILD %d TOWER\n", touchedSite)
@@ -209,26 +294,31 @@ func main() {
 			} else if !havegiant {
 				fmt.Fprintf(os.Stdout,"BUILD %d BARRACKS-GIANT\n", touchedSite)
 			} else {
-				if allsites[touchedSite].gold > 10 {
+				if (allsites[touchedSite].gold > 5 || productivity < 5) {
 					fmt.Fprintf(os.Stdout,"BUILD %d MINE\n", touchedSite)
 				} else {
 					fmt.Fprintf(os.Stdout,"BUILD %d TOWER\n", touchedSite)
 				}
 			}
 		} else {
-			if !retreat && (allsites[touchedSite]).structureType == 0 && allsites[touchedSite].param1 < allsites[touchedSite].maxMineSize && allsites[touchedSite].owner == 0 && allsites[touchedSite].gold > 50 {
+			rayon :=  int(math.Sqrt((float64(allsites[touchedSite].param1) * 1000 + float64(allsites[touchedSite].radius) * float64(allsites[touchedSite].radius) * math.Pi) / math.Pi))
+			fmt.Fprintf(os.Stderr,"RAYON %d %d\n", rayon, allsites[touchedSite].param2)
+			if !retreat && (allsites[touchedSite]).structureType == 0 && allsites[touchedSite].param1 < allsites[touchedSite].maxMineSize && allsites[touchedSite].owner == 0 && allsites[touchedSite].gold > 5 {
 				//fmt.Fprintf(os.Stderr,"BUILD max: %d %d\n", allsites[touchedSite].maxMineSize, allsites[touchedSite].param2)
 				fmt.Fprintf(os.Stdout,"BUILD %d MINE\n", touchedSite)
-			} else if !retreat && (allsites[touchedSite]).structureType == 1 && allsites[touchedSite].param1 < allsites[touchedSite].param2 && allsites[touchedSite].owner == 0 {
+			} else if !retreat && (allsites[touchedSite]).structureType == 1 && allsites[touchedSite].param2 < 500 && allsites[touchedSite].owner == 0 && productivity > 1 {
 				//fmt.Fprintf(os.Stderr,"BUILD max: %d %d\n", allsites[touchedSite].maxMineSize, allsites[touchedSite].param2)
 				fmt.Fprintf(os.Stdout,"BUILD %d TOWER\n", touchedSite)
 			} else if retreat && len(listtower) > 1 {
-				newx, newy := findSafeZone(listtower)
-				queens[0].moveTo(newx, newy)
+				if allsites[touchedSite].structureType == 1 && allsites[touchedSite].owner == 0 {
+					fmt.Fprintf(os.Stdout,"BUILD %d TOWER\n", touchedSite)
+				} else {
+					newx, newy := findSafeZone(allsites, initstartx, initstarty)
+					queens[0].moveTo(newx, newy)
+				}
 			} else {
 				queens[0].moveTo(target.x, target.y)
 			}
-
 			// on se deplace vers le prochain site vide
 			// on se deplace pour eviter les enemis 
 			// ou pour se placer au milieu de la zone de defense
@@ -239,7 +329,7 @@ func main() {
 		//fmt.Fprintf(os.Stdout,"BUILD %d BARRACKS-KNIGHT \n", touchedSite)
 
 		if !retreat {
-			if enemytowercount > 2 && bgiant.x > 0 {
+			if enemytowercount > 2 && bgiant.x > 0 && giantcount < 3 {
 				fmt.Fprintf(os.Stdout, "TRAIN %d\n", bgiant.siteId)
 			} else {
 				fmt.Fprintf(os.Stdout, "TRAIN %d\n", bknight.siteId)
