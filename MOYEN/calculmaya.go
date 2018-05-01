@@ -1,8 +1,8 @@
-
 package main
 
 import "fmt"
 import "os"
+import "math"
 
 func (table *table) convertToNum(chiffre []string) int {
 	var solution int
@@ -20,6 +20,21 @@ func (table *table) convertToNum(chiffre []string) int {
 		if i == len(table.numeration) { return w}
 	}
 	return solution
+}
+
+func convertToBase20(chiffre int) []int {
+	value := float64(chiffre)
+	var base []int
+	for value > 0 {
+		newvalue := math.Floor(value / 20)
+		if newvalue > 0 {
+			base = append(base, int(math.Mod(value, 20)))
+		} else {
+			base = append(base, int(value))
+		}
+		value = newvalue
+	}
+	return base
 }
 
 func (table *table) convertToMaya(chiffre int) []string {
@@ -52,7 +67,7 @@ func main() {
 		var num1Line string
 		fmt.Scan(&num1Line)
 		chiffre1 = append(chiffre1, num1Line)
-		//fmt.Fprintf(os.Stderr, "line: %s \n", num1Line)
+		fmt.Fprintf(os.Stderr, "line: %s \n", num1Line)
 	}
 	
 	var S2 int
@@ -62,13 +77,12 @@ func main() {
 		var num2Line string
 		fmt.Scan(&num2Line)
 		chiffre2 = append(chiffre2, num2Line)
-		//fmt.Fprintf(os.Stderr, "line: %s \n", num2Line)
+		fmt.Fprintf(os.Stderr, "line: %s \n", num2Line)
 	}
+	
 	var operation string
 	fmt.Scan(&operation)
-
-	//fmt.Fprintf(os.Stderr, "chiffre1: %d \n", matable.convertToNum(chiffre1))
-	//fmt.Fprintf(os.Stderr, "chiffre2: %d \n", matable.convertToNum(chiffre2))
+	fmt.Fprintf(os.Stderr, "operation: %s \n", operation)
 
 	num1:= matable.convertToNum(chiffre1)
 	num2:= matable.convertToNum(chiffre2)
@@ -81,10 +95,14 @@ func main() {
 		case "/": num = num1 / num2
 		case "*": num = num1 * num2
 	}
-	result := matable.convertToMaya(num)
-	
-	fmt.Fprintln(os.Stderr, "Debug messages...")
-	for i:= range result {
-		fmt.Println(result[i])
+
+	newbase := convertToBase20(num)
+	fmt.Fprintf(os.Stderr, "newbase: %d\n", newbase)
+
+	for i := len(newbase)-1; i > -1; i--{
+		result := matable.convertToMaya(newbase[i])
+		for i:= range result {
+			fmt.Println(result[i])
+		}
 	}
 }
