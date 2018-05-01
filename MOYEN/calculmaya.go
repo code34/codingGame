@@ -63,12 +63,25 @@ func main() {
 	var S1 int
 	fmt.Scan(&S1)
 	var chiffre1 []string
+	var index int
+	var mynum1 [][]string
 	for i := 0; i < S1; i++ {
 		var num1Line string
 		fmt.Scan(&num1Line)
-		chiffre1 = append(chiffre1, num1Line)
-		fmt.Fprintf(os.Stderr, "line: %s \n", num1Line)
+		if index < matable.H {
+			chiffre1 = append(chiffre1, num1Line)
+		} else {
+			fmt.Fprintf(os.Stderr, "line:  \n")
+			index = 0
+			mynum1 = append(mynum1, chiffre1)
+			chiffre1 = nil
+			chiffre1 = append(chiffre1, num1Line)
+		}
+		index++
+		fmt.Fprintf(os.Stderr, "line: %d %d %s \n", S1, matable.H, num1Line)
 	}
+	mynum1 = append(mynum1, chiffre1)
+	fmt.Fprintf(os.Stderr, "num: %d \n", mynum1)
 	
 	var S2 int
 	fmt.Scan(&S2)
@@ -77,14 +90,26 @@ func main() {
 		var num2Line string
 		fmt.Scan(&num2Line)
 		chiffre2 = append(chiffre2, num2Line)
-		fmt.Fprintf(os.Stderr, "line: %s \n", num2Line)
+		fmt.Fprintf(os.Stderr, "line2: %d %d %s \n", S2, matable.H, num2Line)
 	}
 	
 	var operation string
 	fmt.Scan(&operation)
 	fmt.Fprintf(os.Stderr, "operation: %s \n", operation)
 
-	num1:= matable.convertToNum(chiffre1)
+	expo := len(mynum1) - 1
+	fmt.Fprintf(os.Stderr, "expo: %d\n", expo)
+	var num1 int
+	for _, numero := range mynum1 {
+		var result int
+		if expo > 0 {
+			result= int(math.Pow(20, float64(expo)))
+		}
+		num1 = result + matable.convertToNum(numero)
+		fmt.Fprintf(os.Stderr, "BERRRKKK: %d %d\n", num1, result)
+		expo--
+	}
+
 	num2:= matable.convertToNum(chiffre2)
 	fmt.Fprintf(os.Stderr, "resultats: %d %d\n", num1, num2)
 
