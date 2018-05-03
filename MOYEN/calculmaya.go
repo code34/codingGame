@@ -4,7 +4,7 @@ import "fmt"
 import "os"
 import "math"
 
-func (table *table) convertToNum(chiffre []string) int {
+func (table *table) convertStringToNum(chiffre []string) int {
 	var solution int
 	for w:= 0; w < 20; w++ {
 		var i int
@@ -15,11 +15,27 @@ func (table *table) convertToNum(chiffre []string) int {
 				break
 			}
 			i++
-			//fmt.Fprintf(os.Stderr, "NUM: %s \n", text)
 		}
 		if i == len(table.numeration) { return w}
 	}
 	return solution
+}
+
+func convertMayaToNum (mayanumber [][]string, matable table) int {
+	expo := len(mayanumber) - 1
+	var decimalnumber int
+	for _, chiffre := range mayanumber {
+		var result int
+		if expo > 0 {
+			result= int(math.Pow(20, float64(expo)))
+			result = result * matable.convertStringToNum(chiffre)
+		} else {
+			result = matable.convertStringToNum(chiffre)
+		}
+		decimalnumber = decimalnumber + result
+		expo--
+	}
+	return decimalnumber
 }
 
 func convertToBase20(chiffre int) []int {
@@ -34,6 +50,7 @@ func convertToBase20(chiffre int) []int {
 		}
 		value = newvalue
 	}
+	if len(base) == 0 { base = append(base, 0)}
 	return base
 }
 
@@ -63,8 +80,11 @@ func main() {
 	var S1 int
 	fmt.Scan(&S1)
 	var chiffre1 []string
+	var chiffre2 []string
 	var index int
-	var mynum1 [][]string
+	var mayanum1 [][]string
+	var mayanum2 [][]string
+
 	for i := 0; i < S1; i++ {
 		var num1Line string
 		fmt.Scan(&num1Line)
@@ -73,45 +93,42 @@ func main() {
 		} else {
 			fmt.Fprintf(os.Stderr, "line:  \n")
 			index = 0
-			mynum1 = append(mynum1, chiffre1)
+			mayanum1 = append(mayanum1, chiffre1)
 			chiffre1 = nil
 			chiffre1 = append(chiffre1, num1Line)
 		}
 		index++
 		fmt.Fprintf(os.Stderr, "line: %d %d %s \n", S1, matable.H, num1Line)
 	}
-	mynum1 = append(mynum1, chiffre1)
-	fmt.Fprintf(os.Stderr, "num: %d \n", mynum1)
+	mayanum1 = append(mayanum1, chiffre1)
 	
 	var S2 int
 	fmt.Scan(&S2)
-	var chiffre2 []string
+	index = 0
+
 	for i := 0; i < S2; i++ {
 		var num2Line string
 		fmt.Scan(&num2Line)
-		chiffre2 = append(chiffre2, num2Line)
-		fmt.Fprintf(os.Stderr, "line2: %d %d %s \n", S2, matable.H, num2Line)
+		if index < matable.H {
+			chiffre2 = append(chiffre2, num2Line)
+		} else {
+			fmt.Fprintf(os.Stderr, "line:  \n")
+			index = 0
+			mayanum2 = append(mayanum2, chiffre2)
+			chiffre2 = nil
+			chiffre2 = append(chiffre2, num2Line)
+		}
+		index++
+		fmt.Fprintf(os.Stderr, "line: %d %d %s \n", S2, matable.H, num2Line)
 	}
+	mayanum2 = append(mayanum2, chiffre2)
 	
 	var operation string
 	fmt.Scan(&operation)
-	fmt.Fprintf(os.Stderr, "operation: %s \n", operation)
 
-	expo := len(mynum1) - 1
-	fmt.Fprintf(os.Stderr, "expo: %d\n", expo)
-	var num1 int
-	for _, numero := range mynum1 {
-		var result int
-		if expo > 0 {
-			result= int(math.Pow(20, float64(expo)))
-		}
-		num1 = result + matable.convertToNum(numero)
-		fmt.Fprintf(os.Stderr, "BERRRKKK: %d %d\n", num1, result)
-		expo--
-	}
-
-	num2:= matable.convertToNum(chiffre2)
-	fmt.Fprintf(os.Stderr, "resultats: %d %d\n", num1, num2)
+	num1:= convertMayaToNum(mayanum1, matable)
+	num2:= convertMayaToNum(mayanum2, matable)
+	fmt.Fprintf(os.Stderr, "CALCUL: %d %s %d\n", num1, operation, num2)
 
 	var num int
 	switch operation {
@@ -122,8 +139,6 @@ func main() {
 	}
 
 	newbase := convertToBase20(num)
-	fmt.Fprintf(os.Stderr, "newbase: %d\n", newbase)
-
 	for i := len(newbase)-1; i > -1; i--{
 		result := matable.convertToMaya(newbase[i])
 		for i:= range result {
