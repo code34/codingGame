@@ -1,3 +1,11 @@
+/*Suite à la découverte d'un nouveau site maya, des centaines de livres 
+de mathématiques, de physique et d'astronomie ont été mis au jour.La 
+fin du monde pourrait arriver plus vite que prévue, nous avons besoin de 
+vous pour en être certain ! Ainsi, pour automatiser la vérification des calculs 
+scientifiques maya, on vous demande de mettre au point un programme 
+capable de réaliser les opérations arithmétiques basiques entre deux 
+nombres maya.*/
+
 package main
 
 import "fmt"
