@@ -14,7 +14,7 @@ type element struct {
 }
 
 type themap struct {
-	mymap [100][200]string
+	mymap [200][100]string
 }
 
 func distance (source element, destination element) int {
@@ -31,10 +31,11 @@ func distance (source element, destination element) int {
 
 func (carte *themap) findNextMove (position element) element {
 	var result element
-	cross := []element { {position.x - 1, position.y}, {position.x, position.y-1}, {position.x + 1, position.y}, {position.x, position.y +1}}
+	cross := []element { {position.x - 1, position.y}, {position.x, position.y - 1}, {position.x + 1, position.y}, {position.x, position.y +1}}
 	for _, neighbour := range cross {
 		if carte.mymap[neighbour.x][neighbour.y] != "#" {
 			result = neighbour
+			fmt.Fprintf(os.Stderr, "KIRK: %d\n", result)
 		}
 	}
 	return result
@@ -58,7 +59,7 @@ func main() {
 		// KR: row where Kirk is located.
 		// KC: column where Kirk is located.
 		fmt.Scan(&kirk.y, &kirk.x)
-		
+
 		for y := 0; y < R; y++ {
 			// ROW: C of the characters in '#.TC?' (i.e. one line of the ASCII maze).
 			var ROW string
@@ -76,10 +77,10 @@ func main() {
 				}
 				if y == kirk.y && x == kirk.x {
 					fmt.Fprintf(os.Stderr, "K")
-					carte.mymap[y][x] = "K"
+					carte.mymap[x][y] = "K"
 				} else{
 					fmt.Fprintf(os.Stderr, "%s", string(value))
-					carte.mymap[y][x] = string(value)
+					carte.mymap[x][y] = string(value)
 				}
 			}
 			fmt.Fprintf(os.Stderr, "\n")
@@ -89,7 +90,7 @@ func main() {
 		}
 		path = append(path, kirk)
 		nextmove:= carte.findNextMove (kirk)
-		fmt.Fprintf(os.Stderr, "%d %d %d %d\n", start, end, goal, path)
+		fmt.Fprintf(os.Stderr, "%d %d %d %d %d\n", kirk, start, end, goal, path)
 		fmt.Fprintf(os.Stderr, "NEXTMOVE: %d\n", nextmove)
 		fmt.Println("RIGHT") // Kirk's next move (UP DOWN LEFT or RIGHT).
 	}
