@@ -26,10 +26,21 @@ func distance (source element, destination element) int {
 	return (newx+newy)
 }
 
+func (carte *themap) checkNextPosition(position element) element {
+	var result element
+	cross := []element { {position.x - 1, position.y}, {position.x, position.y - 1}, {position.x + 1, position.y}, {position.x, position.y +1}}
+	for _, neighbour := range cross {
+		if carte.mymap[neighbour.x][neighbour.y] != "#" && carte.mymap[neighbour.x][neighbour.y] != "V"{
+			result = neighbour
+		}
+	}
+	return result
+}
+
 func (carte *themap) defineGoal(position element) element {
 	var goal element
 	if carte.controler.x == -1 && carte.controler.y == -1 {
-		goal = element {position.x +5 , position.y}
+		goal = carte.checkNextPosition(position)
 	} else {
 		goal = carte.controler
 	}
@@ -100,7 +111,9 @@ func main() {
 					carte.mymap[x][y] = "K"
 				} else{
 					fmt.Fprintf(os.Stderr, "%s", string(value))
-					carte.mymap[x][y] = string(value)
+					if carte.mymap[x][y] != "V" {
+						carte.mymap[x][y] = string(value)
+					}
 				}
 			}
 			fmt.Fprintf(os.Stderr, "\n")
@@ -114,6 +127,8 @@ func main() {
 			path = append(path, kirk)
 		}
 		direction:= carte.findDirection(kirk, nextmove)
+		carte.mymap[kirk.x][kirk.y] = "V"
+		
 		fmt.Fprintf(os.Stderr, "%d %d %d\n", carte.teleport, carte.controler, path)
 		fmt.Fprintf(os.Stderr, "NEXTMOVE: %d KIRK: %d\n", nextmove, kirk)
 		fmt.Println(direction) // Kirk's next move (UP DOWN LEFT or RIGHT).
